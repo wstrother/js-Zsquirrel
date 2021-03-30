@@ -8,13 +8,19 @@ export class GameDebugInterface {
     }
 
     setStateHud(entity, target) {
-        entity.graphics = new TextGraphics(entity);
-        
-        // entity.graphics.color = "black";
-        // entity.graphics.font = "20px Courier New";
+        const graphics = new TextGraphics(entity);
+        entity.addComponent('graphics', graphics);
         
         entity.updateMethods.push(() => {
-            let text = `${target.currentAnimation.frameCount} ${target.currentAnimation.name}`;
+            let animator = target.animator;
+
+            let text;
+            if (animator.currentAnimation) {
+                text = `${animator.currentAnimation.frameCount} ${animator.current}`;
+            }
+            else {
+                text = `No '${animator.current}' animation found`;
+            }
             entity.graphics.setText(text);
         });
     }
@@ -32,12 +38,12 @@ export class GameDebugInterface {
             rectLayer.setPosition(...imageSprite.position);
         });
 
-        rectLayer.graphics = new RectLayerGraphics(rectLayer);
-        rectLayer.graphics.color = "0xff1010";
+        const graphics = new RectLayerGraphics(rectLayer);
+        rectLayer.addComponent('graphics', graphics, true);
+        graphics.color = "0xff1010";
 
         rectLayer.updateMethods.push(() => {
-            let rects = animSprite.currentAnimation.currentFrame.sprites;
-            rects = rects.map(key => animSprite.graphics.rectMap.get(key));
+            let rects = animSprite.animator.currentRects;
             rectLayer.graphics.rects = rects;
         });
     }
@@ -54,6 +60,19 @@ export class GameDebugInterface {
             if (direction !== 0) {
                 entity.events.emit('cycleAnimation', direction);
             }
+        });
+        
+        entity.events.listen('cycleAnimation', (direction) => {
+            let animator = entity.animator;
+            let animations = animator.animationNames;
+
+            let i = animations.findIndex(key => key === animator.current);
+            
+            i += direction;
+            if (i < 0) { i = animations.length - 1; }
+            i = i % animations.length;
+
+            animator.setAnimation(animations[i]);
         });
     }
 
@@ -73,30 +92,9 @@ export class GameDebugInterface {
         });
     }
 
-    // setRectGraphics(layer, color, group) {
-    //     layer.graphics = new RectLayerGraphics(layer);
-
-    //     layer.graphics.getRects = () => {
-    //         return group.entities.map(entity => {
-    //             let rect;
-    //             if (entity.graphics.rect) {
-    //                 rect = new Rect(...entity.position, ...entity.graphics.rect.size)
-    //             } else {
-    //                 let img = entity.graphics.image;
-    //                 let size = [
-    //                     img.width,
-    //                     img.height
-    //                 ]
-    //                 rect = new Rect(...entity.position, ...size);
-    //             }
-
-    //             return {rect, color};
-    //         });
-    //     }
-    // }
-
     setModelValue(entity, key, interval=5) {
-        entity.graphics = new TextGraphics(entity);
+        const graphics = new TextGraphics(entity);
+        entity.addComponent('graphics', graphics);
 
         let frames = 0;
         let last = "";
@@ -126,8 +124,6 @@ export class GameDebugInterface {
             entity.graphics.setText(last);
         }
 
-        entity.graphics.color = "black";
-        entity.graphics.font = "15px Courier New"
         entity.updateMethods.push(getText);
     }
 

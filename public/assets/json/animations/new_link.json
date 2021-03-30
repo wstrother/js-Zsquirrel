@@ -3,7 +3,10 @@
     8,
     32
   ],
-  "scale": 2,
+  "cellSize": [
+    16,
+    16
+  ],
   "data": {
     "body": {
       "size": [

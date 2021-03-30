@@ -44,6 +44,41 @@ export class Entity {
 
         this.events = new EventEmitter(this);
         this.updateMethods = [];
+
+        this._components = [];
+        this._componentUpdates = new Map();
+    }
+
+    addComponent(name, component, replace=false) {
+        if (this[name] && !replace) {
+            throw Error(`${this.name} already has a component called ${name}`);
+        }
+        
+        this.removeComponent(name);
+        this._components.push(name);
+        this[name] = component;
+
+        if (component['update']) {
+            let method = (...args) => { component.update(...args); }
+
+            this.updateMethods.push(method);
+            this._componentUpdates.set(name, method);
+        }
+    }
+
+    removeComponent(name) {
+        if (this[name] && !this._components.includes(name)) {
+            throw Error(`${this.name}.${name} is not a component`);
+        }
+
+        delete this[name];
+        if (this._componentUpdates.has(name)) {
+            let method = this._componentUpdates.get(name);
+            this.updateMethods.pop(
+                this.updateMethods.findIndex(m => m === method)
+            );
+            this._componentUpdates.delete(name);
+        }
     }
 
     setVisible(bool) {
@@ -76,14 +111,14 @@ export class Entity {
         this._position.change(...args);
     }
 
-    update(dt) {
+    update(...args) {
         if (!this.spawned) {
             this.spawned = true;
             this.events.emit('spawn', this);
         }
 
         this.updateMethods.forEach(method => {
-            method(dt);
+            method(...args);
         });
     }   
 }
@@ -94,7 +129,7 @@ export class Layer extends Entity {
 
         this._size = new Vector2(0, 0);
         this.entities = [];
-        this.graphics = new LayerGraphics(this);
+        this.addComponent('graphics', new LayerGraphics(this));
     }
 
     addEntity(entity) {
@@ -130,6 +165,13 @@ export class Layer extends Entity {
             this.graphics.setScale(sx, sy);
         }
     }
+
+    update(...args) {
+        super.update(...args);
+
+        this.entities.forEach(entity => entity.update(...args));
+    }
+
 }
 
 export class Group {

@@ -7,14 +7,12 @@ export class Screen {
         this.container.removeChildren();
     }
 
-    draw(entities, layer=null) {
+    draw(entities) {
         this.clear();
 
         entities.forEach(e => {
-            if (e.graphics && e.layer === layer) {
-                if (e.visible) {
-                    e.graphics.draw(this.container); 
-                }
+            if (e.graphics && e.visible) {
+                e.graphics.draw(this.container);
             }
         });
     }
@@ -35,7 +33,6 @@ class Graphics {
 export class ImageGraphics extends Graphics {
     constructor(entity, imageResource, scaleX=1, scaleY=1) {
         super(entity);
-        console.log(imageResource);
         this.imageResource = imageResource;
         this.sprite = new PIXI.Sprite(imageResource);
         this.sprite.anchor.set(0.5, 0.5);
@@ -158,7 +155,7 @@ export class LayerGraphics extends Graphics {
         let [x, y] = this.entity.position;
         this.image.x = x;
         this.image.y = y;
-        this.screen.draw(this.subEntities, this.entity);
+        this.screen.draw(this.subEntities);
     }
 
     draw(container) {
@@ -218,10 +215,9 @@ export class TextGraphics extends Graphics {
         return new PIXI.Text(text, this.style);
     }
 
-    draw(container) {
-        this.setPosition();
-
+    draw(container) {        
         if (this.image) {
+            this.setPosition();
             container.addChild(this.image);
         }        
     }

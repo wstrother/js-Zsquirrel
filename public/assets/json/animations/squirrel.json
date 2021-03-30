@@ -2,6 +2,7 @@
   "frameLength": 4,
   "size": [50, 50],
   "imageSize": [500, 350],
+  "cellSize": [50, 50],
 
   "data": {
     "body": {
@@ -26,7 +27,7 @@
         {
           "rects": [
             {"position": [0, 0]},
-            {"rect": [20, 20, 21, 16], "offset": [25, 25], "mirror": [true, true]}
+            {"rect": [20, 20, 21, 16], "offset": [25, 25], "mirror": [false, false]}
           ]
         },
         {"position": [0, 0]}
@@ -34,6 +35,7 @@
     },
     {
       "name": "shimmy",
+      "mirror": [true, false],
       "frames": [
         {"position": [5, 2]},
         {"position": [6, 2]},
