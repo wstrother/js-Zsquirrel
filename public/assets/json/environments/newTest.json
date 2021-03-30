@@ -1,0 +1,79 @@
+{
+    "entities": [
+        {
+            "name": "Link",
+            "position": [20, 20],
+            "group": "Sprite Group",
+            
+            "SpriteGraphicsInterface": {
+                "setAnimation": ["animations/new_link.json", "link.png"]
+            },
+
+            "GameDebugInterface": {
+                "setAnimationCycler": "Keyboard Controller",
+                "setPauseButton": "Keyboard Controller"
+            }
+        },
+
+        {
+            "name": "Image UI",
+            "position": [0, 100],
+            "group": "Image Group",
+
+            "SpriteGraphicsInterface": {
+                "setImage": "link.png"
+            }
+        },
+
+        {
+            "name": "Keyboard Controller",
+            "class": "Controller",
+            "GameControllerInterface": {
+                "setControllerDevices": "controllers/keyboard.json"
+            }
+        },
+
+        {
+            "name": "State HUD",
+            "position": [150, 20],
+            "group": "UI Group",
+            
+            "GameDebugInterface": {
+                "setStateHud": "Link"
+            }
+        }
+    ],
+
+    "layers": [
+        {
+            "name": "Animation Layer",
+            "size": [400, 300],
+            "scale": [2, 2],
+            "groups": [
+                "Sprite Group"
+            ]
+        },
+
+        {
+            "name": "Debug Layer",
+            "size": [800, 600],
+            "groups": [
+                "UI Group",
+                "Image Group"
+            ],
+
+            "GameDebugInterface": {
+                "setAnimationRectLayer": [
+                    "Image UI",
+                    "Link"
+                ]
+            }
+        }
+    ],
+
+    "groups": [
+        { "name": "UI Group" },
+        { "name": "Image Group" },
+        { "name": "Sprite Group" }
+    ]
+}

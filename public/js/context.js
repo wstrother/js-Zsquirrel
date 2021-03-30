@@ -1,17 +1,19 @@
 import { Entity, Group, Layer } from "./entities.js";
-import { ResourceLoader } from "./resources.js";
 
 export class Context {
-    constructor(interfaces) {
-        this.environment = null;
+    constructor(interfaces, entityClasses) {
+        this.model = new Map();
+
         this.interfaces = new Map();
         interfaces.forEach(i => {
             this.interfaces.set(i.name, new i(this));
         });
 
-        this.model = new Map();
-        this.resourceLoader = new ResourceLoader();
-        this.EnvironmentLoader = new EnvironmentLoader(this);
+        entityClasses.forEach(ec => {
+            this.model.set(ec.name, ec);
+        });
+
+        this.environmentLoader = new EnvironmentLoader(this);
     }
 
     clearModel() {
@@ -24,13 +26,29 @@ export class Context {
         });
     }
 
+    addEntity(entity) {
+        this.model.set(entity.name, entity);
+        this.environmentLoader.entities.push(entity);
+    }
+
+    getValue(value) {
+        if (typeof(value) === 'string') {
+            if (this.model.has(value)) {
+                return this.model.get(value);
+            }
+        }
+
+        return value;
+    }
+
     // populate function parses json, instantiates entities and applies
     // setter values and components based on application interface methods
-    async loadEnvironment(name) {
-        let {url} = this.resourceLoader.getResource(name);
+    async loadEnvironment(name, loader) {
+        let {url} = loader.getResource(name);
 
-        const { resource } = await this.resourceLoader.loadJson(name, url);
-        return this.EnvironmentLoader.populate(resource);
+        const json = await fetch(url).then(resp => resp.json());
+
+        return this.environmentLoader.populate(json, loader);
     }
 }
 
@@ -42,29 +60,31 @@ class EnvironmentLoader {
     }
 
     getValue(value) {
-        if (typeof(value) === 'string') {
-            if (this.context.model.has(value)) {
-                return this.context.model.get(value);
-            }
-        }
-
-        return value;
+        return this.context.getValue(value);
     }
 
-    populate(envJson) {
+    populate(envJson, loader) {
         // search for fileNames and queue them in resource loader
-        parseObject(envJson, this.context);
+        parseObject(envJson, loader);
 
-        return this.context.resourceLoader.loadAll().then(resourceMap => {
+        return loader.loadAll().then(resourceMap => {
             // add loaded resources to the model
             this.context.updateModel(resourceMap);
 
-            // then add Entity instances
-            this.createGroups(envJson.groups);
-            this.createLayers(envJson.layers);
-            this.createEntities(envJson.entities);
+            // instantiate default data lists
+            let interfaces, groups, layers, entities;
+            interfaces = envJson.interfaces || {};
+            groups = envJson.groups || [];
+            layers = envJson.layers || [];
+            entities = envJson.entities || [];
 
-            const allEntities = envJson.layers.concat(envJson.entities);
+            // then add Entity instances
+            this.handleInterfaces(interfaces);
+            this.createGroups(groups);
+            this.createLayers(layers);
+            this.createEntities(entities);
+
+            const allEntities = entities.concat(layers);
 
             // then call setAttribute methods on entities
             allEntities.forEach(data => {
@@ -88,7 +108,9 @@ class EnvironmentLoader {
 
     createEntities(entities) {
         entities.forEach(data => {
-            const newEntity = new Entity(data.name);
+            let entClass = this.getValue(data.class) || Entity;
+
+            const newEntity = new entClass(data.name);
             this.context.model.set(data.name, newEntity);
             this.entities.push(newEntity);
         });
@@ -135,13 +157,25 @@ class EnvironmentLoader {
             }
         });
     }
+
+    handleInterfaces(data) {
+        Object.entries(data).forEach(([name, iData]) => {
+            if (this.context.interfaces.has(name)) {
+                let i = this.context.interfaces.get(name);
+
+                Object.entries(iData).forEach(([methodName, args]) => {
+                    i[methodName](...this.getArgs(args));
+                });
+            }
+        })
+    }
 }
 
-function handleFileName(item, context) {
-    let {fileType} = context.resourceLoader.getResource(item);
+function handleFileName(item, loader) {
+    let {fileType} = loader.getResource(item);
 
     if (fileType) {
-        context.resourceLoader.addResource(item);
+        loader.addResource(item);
     }
 }
 

@@ -1,0 +1,81 @@
+{
+    "entities": [
+        {
+            "name": "Squirrel",
+            "group": "Sprite Group",
+
+            "SpriteGraphicsInterface": {
+                "setGraphics": ["link.png", [4, 17, 34, 33]],
+                "setAnimation": ["animations/new_link.json", "link.png"]
+            },
+
+            "GameDebugInterface": {
+                "setAnimationCycler": "Keyboard Controller",
+                "setPauseButton": "Keyboard Controller"
+            }
+        },
+
+        {
+            "name": "Image UI",
+            "position": [0, 100],
+            "group": "Image Group",
+
+            "SpriteGraphicsInterface": {
+                "setImage": "link.png"
+            }
+        },
+
+        {
+            "name": "State HUD",
+            "position": [150, 20],
+            "group": "UI Group",
+            
+            "GameDebugInterface": {
+                "setStateHud": "Squirrel"
+            }
+        },
+
+        {
+            "name": "Keyboard Controller",
+            "class": "Controller",
+            "GameControllerInterface": {
+                "setControllerDevices": "controllers/keyboard.json"
+            }
+        },
+
+        {
+            "name": "DT Hud",
+            "position": [455, 10],
+            "group": "UI Group",
+
+            "GameDebugInterface": {
+                "setModelValue": ["dt"]
+            }
+        }
+    ],
+
+    "layers": [
+        {
+            "name": "Animation Layer",
+            "size": [800, 600],
+            "groups": [
+                "UI Group",
+                "Image Group",
+                "Sprite Group"
+            ],
+
+            "GameDebugInterface": {
+                "setAnimationRectLayer": [
+                    "Image UI",
+                    "Squirrel"
+                ]
+            }
+        }
+    ],
+
+    "groups": [
+        { "name": "UI Group" },
+        { "name": "Image Group" },
+        { "name": "Sprite Group" }
+    ]
+}

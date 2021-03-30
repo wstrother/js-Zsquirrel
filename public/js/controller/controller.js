@@ -1,8 +1,10 @@
+import { Entity } from "../entities.js";
+
 const FRAME_DEPTH = 25;
 
-export class Controller {
+export class Controller extends Entity {
     constructor(name, frameDepth=FRAME_DEPTH) {
-        this.name = name;
+        super(name);
         this.devices = new Map();
 
         this.frames = new FrameCache(frameDepth)
@@ -19,7 +21,8 @@ export class Controller {
     }
 
     update() {
-        
+        super.update();
+
         // update the frame cache for each device's current input
         this.frames.update();
 

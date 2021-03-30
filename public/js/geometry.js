@@ -84,10 +84,42 @@ export class Rect {
 
         this._position = new Vector2(x, y);
         this._size = new Vector2(width, height);
+
+        this._offset = new Vector2(0, 0);
+        this.scale = [1, 1];
     }
 
-    setSize(x, y) {
-        this._size.coordinates = x, y;
+    set(...args) {
+        let size, position;
+        let width, height, x, y;
+
+        // single Rect is passed
+        if (args.length === 1) {
+            [size, position] = [args[0].size, args[0].position];
+        }
+
+        // two arrays are passed
+        else if (args.length === 2) {
+            [size, position] = args;
+        }
+
+        // four numbers are passed
+        else if (args.length === 4) {
+            [width, height, x, y] = args;
+            size = [width, height];
+            position = [x, y];
+        }
+
+        else {
+            throw Error("Bad argument signature passed to Rect.set");
+        }
+
+        this.setSize(...size);
+        this.setPosition(...position);
+    }
+
+    setSize(width, height) {
+        this._size.coordinates = [width, height];
     }
 
     get size() {
@@ -95,11 +127,39 @@ export class Rect {
     }
 
     setPosition(x, y) {
-        this._position.coordinates = x, y;
+        this._position.coordinates = [x, y];
     }
 
     get position() {
         return this._position.coordinates;
+    }
+
+    setOffset(x, y) {
+        this._offset.coordinates = [x, y];
+    }
+
+    get offset() {
+        return this._offset.coordinates;
+    }
+
+    setScale(x, y) {
+        this.scale = [x, y];
+    }
+
+    setMirror(mx, my) {
+        this.scale = [
+            mx ? -1 : 1,
+            my ? -1 : 1
+        ]
+    }
+
+    get mirror() {
+        let [sx, sy] = this.scale;
+        
+        return [
+            sx < 0,
+            sy < 0
+        ];
     }
 
     get width() {

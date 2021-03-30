@@ -1,0 +1,61 @@
+{
+    "interfaces": {
+        "GameControllerInterface": {
+            "createController": ["Keyboard Controller", "controllers/keyboard.json"]
+        }
+    },
+
+    "entities": [
+        {
+            "name": "Tree",
+            "position": [20, 300],
+            "group": "Sprite Group",
+            "SpriteGraphicsInterface": {
+                "setImage": ["treestart.gif"]
+            }
+        },
+        {
+            "name": "Squirrel",
+            "position": [50, 50],
+            "group": "Sprite Group",
+
+            "SpriteGraphicsInterface": {
+                "setGraphics": ["squirrel.png", [4, 17, 34, 33]],
+                "setAnimation": ["animations/squirrel.json"]
+            },
+
+            "GameControllerInterface": {
+                "addUdlr": ["Keyboard Controller"]
+            }
+        },
+
+        {
+            "name": "DT Hud",
+            "position": [5, 20],
+            "group": "Debug Group",
+
+            "GameDebugInterface": {
+                "setModelValue": ["dt"]
+            }
+        }
+    ],
+
+    "layers": [
+        {
+            "name": "Sprite Layer",
+            "position": [0, 0],
+            "size": [800, 600]
+        },
+
+        {
+            "name": "Debug Layer",
+            "position": [0, 0],
+            "size": [800, 600]
+        }
+    ],
+
+    "groups": [
+        { "name": "Sprite Group" },
+        { "name": "Debug Group"}
+    ]
+}

@@ -1,0 +1,10 @@
+{
+    "devices": [
+        {"name": "A", "type": "ButtonMappingKey", "code": "KeyA"},
+        {"name": "start", "type": "ButtonMappingKey", "code": "Space"},
+        {"name": "up", "type": "ButtonMappingKey", "code": "ArrowUp"},
+        {"name": "down", "type": "ButtonMappingKey", "code": "ArrowDown"},
+        {"name": "left", "type": "ButtonMappingKey", "code": "ArrowLeft"},
+        {"name": "right", "type": "ButtonMappingKey", "code": "ArrowRight"}
+    ]
+}

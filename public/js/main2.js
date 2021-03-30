@@ -1,11 +1,16 @@
-
-import { Screen } from './graphics.js';
 import { Context } from "./context.js";
+import { Screen } from "./graphics.js";
+import { ResourceManager } from "./resources.js";
 import { SpriteGraphicsInterface } from "./interfaces/spriteGraphics.js";
 import { GameControllerInterface } from './interfaces/gameController.js';
 import { GameDebugInterface } from './interfaces/gameDebug.js';
 import { Controller } from './controller/controller.js';
 
+const app = new PIXI.Application();
+
+// The application will create a canvas element for you that you
+// can then insert into the DOM
+document.body.appendChild(app.view);
 
 class Game {
     constructor(screen, environment, context, fps = 60) {
@@ -13,30 +18,22 @@ class Game {
         this.environment = environment;
         this.interval = 1000 / fps;
         this.lastTime = 0;
+        this.accTime = 0;
         this.context = context;
     }
 
     update(time) {
-        let dt = time - this.lastTime;
-        this.lastTime = time;
-        this.context.model.set('dt', dt);
+        this.context.model.set('dt', app.ticker.elapsedMS);
+        // console.log(app.ticker.elapsedMS);
 
         // update entities
         this.environment.entities.forEach(entity => {
             if (!entity.paused) {
-                entity.update(dt);
+                entity.update(time);
             }
         });
 
-        // draw entities to screen
-        if (dt >= 0) {
-            this.screen.draw(this.environment.entities);
-        }
-        
-        // initiatie game loop
-        window.requestAnimationFrame(time => {
-            this.update(time);
-        });
+        this.screen.draw(this.environment.entities);
     }
 }
 
@@ -46,11 +43,6 @@ class Environment {
         this.entities = entities;
     }
 }
-
-
-// main routine
-
-const canvas = document.getElementById('screen');
 
 const envContext = new Context(
     [
@@ -63,15 +55,17 @@ const envContext = new Context(
     ]
 );
 
-envContext.loadEnvironment("environments/animation.json").then(entities => {
+envContext.loadEnvironment(
+    'environments/newTest.json', 
+    new ResourceManager(app.loader)
+).then(entities => {
+    console.log(entities);
+    
     const env = new Environment(entities);
-    const scr = new Screen(canvas);
+    const scr = new Screen(app.stage);
     const game = new Game(scr, env, envContext);
 
-    console.log(envContext.model);
-
-    window.requestAnimationFrame(time => {
+    app.ticker.add(time => {
         game.update(time);
-    });
-
+    })
 });
