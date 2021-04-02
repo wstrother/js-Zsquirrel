@@ -1,72 +1,78 @@
-import { Vector2 } from "../geometry.js";
-import { StateMachine } from "../stateMachine.js";
+import { parseStateMachine, StateMachine } from "../states/stateMachine.js";
+import { Movement } from "../physics/physics.js";
 
 
-class Movement {
-    constructor(entity) {
-        this.entity = entity;
-        this._heading = new Vector2(1, 0);
-    }
+// class Movement {
+//     constructor(entity) {
+//         this.entity = entity;
+//         this._heading = new Vector2(1, 0);
+//     }
 
-    get heading() {
-        return this._heading.coordinates;
-    }
+//     get heading() {
+//         return this._heading.coordinates;
+//     }
 
-    get x() {
-        return this._heading.x;
-    }
+//     get x() {
+//         return this._heading.x;
+//     }
 
-    get y() {
-        return this._heading.y;
-    }
+//     get y() {
+//         return this._heading.y;
+//     }
 
-    get dirString() {
-        let [x, y] = this.heading;
+//     get dirString() {
+//         let [x, y] = this.heading;
 
-        if (x == 1) {
-            return 'right';
-        }
+//         if (x == 1) {
+//             return 'right';
+//         }
 
-        if (x == -1) {
-            return 'left';
-        }
+//         if (x == -1) {
+//             return 'left';
+//         }
 
-        if (y == -1) {
-            return 'up';
-        }
+//         if (y == -1) {
+//             return 'up';
+//         }
 
-        if (y == 1) {
-            return 'down';
-        }
+//         if (y == 1) {
+//             return 'down';
+//         }
 
-        return '';
-    }
+//         return '';
+//     }
 
-    reverse() {
-        this._heading.x *= -1;
-    }
+//     reverse() {
+//         this._heading.x *= -1;
+//     }
 
-    update() {
-        let pivot = this.entity.animator.current.includes('pivot');
+//     update() {
+//         let pivot = this.entity.animator.current.includes('pivot');
 
-        if (pivot && animation_done(this.entity)) {
-            console.log("Heading changed");
-            this.reverse();
-        }
-    }
-}
+//         if (pivot && animation_done(this.entity)) {
+//             console.log("Heading changed");
+//             this.reverse();
+//         }
+//     }
+// }
 
 
 export class EntityBehaviorInterface {
     constructor(context) {
         this.context = context;
+
+        this.conditionMap = new Map();
     }
 
-    setAnimationMachine(entity, controller) {
-        let stateMachine = new StateMachine('default');
+    setAnimationMachine(entity, controller, data) {
+        let stateMachine = new StateMachine(entity, 'default');
 
         entity.addComponent('states', stateMachine);
         entity.addComponent('movement', new Movement(entity));
+
+        entity.events.listen('stateChange', (state) => {
+            console.log(`${entity.name}.state changed to ${state}`);
+        });
 
         entity.updateMethods.push(() => {
             entity.animator.setAnimation(
@@ -74,36 +80,8 @@ export class EntityBehaviorInterface {
             );
         });
 
-        stateMachine.addState(
-            'default',
-            () => {
-                if (dpad_forward(entity, controller)) {
-                    return 'walk';
-                }
-
-                if (dpad_backward(entity, controller)) {
-                    return 'pivot';
-                }
-            }
-        );
-
-        stateMachine.addState(
-            'walk',
-            () => {
-                if (!dpad_forward(entity, controller)) {
-                    return 'default';
-                }
-            }
-        );
-
-        stateMachine.addState(
-            'pivot',
-            () => {
-                if (animation_done(entity)) {
-                    return 'default';
-                }
-            }
-        );
+        this.setConditions(entity, controller);
+        parseStateMachine(stateMachine, data, this.conditionMap);
     }
 
     getAnimationName(entity) {
@@ -125,6 +103,18 @@ export class EntityBehaviorInterface {
             return "default";
         }
     }
+
+    setConditions(entity, controller) {
+        let add = (name, m, ...args) => { 
+            this.conditionMap.set(name, () => m(...args));
+        }
+
+        add('auto', animation_done, entity);
+        add('dpad_forward', dpad_forward, entity, controller);
+        add('dpad_backward', dpad_backward, entity, controller);
+        add('press_start', press_start, controller);
+        add('dpad_x_neutral', dpad_x_neutral, controller);
+    }
 }
 
 
@@ -134,6 +124,11 @@ function animation_done(entity) {
     return (animation.frameCount === animation.length - 1)
 }
 
+function press_start(controller) {
+    let start = controller.devices.get('start');
+
+    return start.check();
+}
 
 function dpad_forward(entity, controller) {
     let [u, d, l, r] = ["up", "down", "left", "right"].map(d => controller.devices.get(d));
@@ -165,7 +160,7 @@ function dpad_backward(entity, controller) {
     return backward;
 }
 
-function dpad_x_neutral(entity, controller) {
+function dpad_x_neutral(controller) {
     let [u, d, l, r] = ["up", "down", "left", "right"].map(d => controller.devices.get(d));
 
     let [dx, dy] = [0, 0];
@@ -175,14 +170,3 @@ function dpad_x_neutral(entity, controller) {
     let neutral = dx === 0;
     return neutral;
 }
-
-// class MovementFactory {
-//     constructor(entity, controller) {
-//         this.entity;
-//         this.controller;
-//     }
-
-//     getMethod(name) {
-
-//     }
-// }

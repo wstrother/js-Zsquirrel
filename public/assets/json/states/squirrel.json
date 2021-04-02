@@ -1,0 +1,44 @@
+{
+  "states": [
+    {
+      "name": "default",
+      "transitions": [
+        ["walk", "dpad_forward"],
+        ["pivot", "dpad_backward"],
+        ["shimmy", "press_start"]
+      ]
+    },
+    
+    {
+      "name": "walk",
+      "transitions": [
+        ["default", "dpad_forward", false],
+        ["pivot", "dpad_backward"]
+      ]
+    },
+
+    
+    {
+      "name": "pivot",
+      "transitions": [
+        ["default", "auto"],
+        ["walk", "dpad_forward"]
+      ]
+    },
+
+    {
+      "name": "shimmy",
+      "transitions": [
+        ["default", "auto"],
+        ["moonwalk2", "press_start", true, true]
+      ]
+    },
+
+    {
+      "name": "moonwalk2",
+      "transitions": [
+        ["default", "press_start"]
+      ]
+    }
+  ]
+}

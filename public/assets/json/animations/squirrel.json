@@ -35,6 +35,7 @@
     },
     {
       "name": "shimmy",
+      "frameLength": 15,
       "mirror": [true, false],
       "frames": [
         {"position": [5, 2]},

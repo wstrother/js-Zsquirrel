@@ -11,7 +11,7 @@
                 "setAnimation": ["animations/squirrel.json", "squirrel.png"]
             },
             "EntityBehaviorInterface": {
-                "setAnimationMachine": ["Keyboard Controller"]
+                "setAnimationMachine": ["Keyboard Controller", "states/squirrel.json"]
             }
         },
 

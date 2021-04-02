@@ -1,8 +1,28 @@
 
 export class Vector2 {
-    constructor(x, y) {
+    constructor(...args) {
+        let [x, y] = this.parseArgs(...args);
+
         this.x = x;
         this.y = y;
+    }
+
+    parseArgs(...args) {
+        let x, y;
+
+        // Vector2 was passed
+        if (args.length === 1) {
+            [x, y] = args[0].x, args[0].y;
+
+        // [x, y] was passed
+        } else if (args.length === 2) {
+            [x, y] = args;
+
+        } else {
+            throw Error("Bad signature passed to Vector2 method");
+        }
+
+        return [x, y];
     }
 
     get coordinates() {
@@ -17,35 +37,74 @@ export class Vector2 {
         this.y = y;
     }
 
+    get magnitude() {
+        return Math.sqrt(this.x ** 2 + this.y ** 2);
+    }
+
+    // get rotation in terms of Tau Radians (i.e. 1 = a full rotation)
+    get theta() {
+        let angle = Math.atan2(-this.y, this.x);
+        angle /= Math.PI * 2;
+
+        // adjust the output range from 0 to 1 instead of -.5 to .5
+        if (angle > 0) {
+            return angle;
+        }
+
+        else {
+            return 1 + angle;
+        }
+    }
+
+    set theta(angle) {
+        let delta = angle - this.theta;
+        this.rotate(delta);
+    }
+
+    // adjust the angle in Tau Radians (i.e. 1 = a full rotation) 
+    rotate(turns) {
+        turns *= 2 * Math.PI;
+        let [i, j] = [Math.cos(turns), Math.sin(turns)];
+
+        this.multiply(i, j);
+
+        return this;
+    }
+
     set(x, y) {
         this.x = x;
         this.y = y;
     }
 
+    // returns a new Vector2 that is the result of addition
     add(...args) {
-        let dx, dy;
-
-        if (args.length === 1) {
-            [dx, dy] = args[0].x, args[0].y;
-        } else if (args.length === 2) {
-            [dx, dy] = args;
-        } else {
-            throw Error("Bad signature passed to Vector2.add");
-        }
+        let [dx, dy] = this.parseArgs(...args);
 
         return new Vector2(this.x + dx, this.y + dy);
     }
 
-    change(...args) {
-        let dx, dy;
+    scale(magnitude) {
+        this.x *= magnitude;
+        this.y *= magnitude;
+    }
 
-        if (args.length === 1) {
-            [dx, dy] = args[0].x, args[0].y;
-        } else if (args.length === 2) {
-            [dx, dy] = args;
-        } else {
-            throw Error("Bad signature passed to Vector2.change");
-        }
+    multiply(...args) {
+        let [a, b] = this.parseArgs(...args);
+        let [c, d] = this.coordinates;
+
+        // simplified FOIL formula
+        let [i, j] = [
+            (a * c) - (b * d),
+            (a * d) + (b * c)
+        ]
+
+        this.x = i;
+        this.y = j;
+    }
+
+    // alters Vector2 instance in place
+    move(...args) {
+        let [dx, dy] = this.parseArgs(...args);
 
         this.x = this.x + dx;
         this.y = this.y + dy;

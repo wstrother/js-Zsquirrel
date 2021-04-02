@@ -101,7 +101,6 @@ export class Animator {
 
     setAnimation(name) {
         if (this.current !== name) {
-            console.log(name);
 
             if (this.currentAnimation) {
                 this.currentAnimation.reset();
