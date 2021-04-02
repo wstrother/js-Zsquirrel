@@ -27,7 +27,8 @@
         {
           "rects": [
             {"position": [0, 0]},
-            {"rect": [20, 20, 21, 16], "offset": [25, 25], "mirror": [false, false]}
+            {"rect": [20, 20, 21, 16], "offset": [25, 25], "mirror": [true, false]},
+            {"rect": [20, 20, 21, 16], "offset": [25, 25], "mirror": [false, true]}
           ]
         },
         {"position": [0, 0]}
@@ -35,7 +36,6 @@
     },
     {
       "name": "shimmy",
-      "frameLength": 15,
       "mirror": [true, false],
       "frames": [
         {"position": [5, 2]},

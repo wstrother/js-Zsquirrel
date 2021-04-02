@@ -108,7 +108,7 @@ export class Entity {
     }
 
     move(...args) {
-        this._position.change(...args);
+        this._position.move(...args);
     }
 
     update(...args) {

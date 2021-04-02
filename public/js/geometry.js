@@ -1,13 +1,13 @@
 
 export class Vector2 {
     constructor(...args) {
-        let [x, y] = this.parseArgs(...args);
+        let [x, y] = Vector2.parseArgs(...args);
 
         this.x = x;
         this.y = y;
     }
 
-    parseArgs(...args) {
+    static parseArgs(...args) {
         let x, y;
 
         // Vector2 was passed
@@ -19,7 +19,7 @@ export class Vector2 {
             [x, y] = args;
 
         } else {
-            throw Error("Bad signature passed to Vector2 method");
+            throw Error("Bad signature passed to Vector2.parseArgs");
         }
 
         return [x, y];
@@ -42,7 +42,7 @@ export class Vector2 {
     }
 
     // get rotation in terms of Tau Radians (i.e. 1 = a full rotation)
-    get theta() {
+    get angle() {
         let angle = Math.atan2(-this.y, this.x);
         angle /= Math.PI * 2;
 
@@ -56,8 +56,8 @@ export class Vector2 {
         }
     }
 
-    set theta(angle) {
-        let delta = angle - this.theta;
+    set angle(angle) {
+        let delta = angle - this.angle;
         this.rotate(delta);
     }
 
@@ -78,7 +78,7 @@ export class Vector2 {
 
     // returns a new Vector2 that is the result of addition
     add(...args) {
-        let [dx, dy] = this.parseArgs(...args);
+        let [dx, dy] = Vector2.parseArgs(...args);
 
         return new Vector2(this.x + dx, this.y + dy);
     }
@@ -89,7 +89,7 @@ export class Vector2 {
     }
 
     multiply(...args) {
-        let [a, b] = this.parseArgs(...args);
+        let [a, b] = Vector2.parseArgs(...args);
         let [c, d] = this.coordinates;
 
         // simplified FOIL formula
@@ -104,7 +104,7 @@ export class Vector2 {
 
     // alters Vector2 instance in place
     move(...args) {
-        let [dx, dy] = this.parseArgs(...args);
+        let [dx, dy] = Vector2.parseArgs(...args);
 
         this.x = this.x + dx;
         this.y = this.y + dy;
@@ -114,9 +114,26 @@ export class Vector2 {
 
 export class Rect {
     constructor(...args) {
-        let width, height, x, y;
+        let [x, y, width, height] = Rect.parseArgs(...args);
 
-        if (args.length === 2) {
+        this._position = new Vector2(x, y);
+        this._size = new Vector2(width, height);
+
+        this._offset = new Vector2(0, 0);
+        this._scale = new Vector2(1, 1);
+        this._rotation = new Vector2(1, 0);
+    }
+
+    static parseArgs(...args) {
+        let x, y, width, height;
+
+        // parameter is single Rect
+        if (args.length === 1) {
+            let rect = args[0];
+
+            [x, y, width, height] = [...rect.position, ...rect.size]
+
+        } else if (args.length === 2) {
             // parameters signature: (positionVector2, sizeVector2)
             if (typeof(args[0]) === Vector2) {
                 [x, y] = args[0].coordinates;
@@ -132,49 +149,27 @@ export class Rect {
         } else if (args.length === 4) {
             [x, y, width, height] = args;
 
-        // parameters signature: (x, y, sizeVector2)
+        // parameters signature: (x, y, size: Vector2)
         } else if (args.length === 3) {
             [x, y, width, height] = [args[0], args[1], ...args[2].coordinates];
 
 
         } else {
-            throw Error("Bad signature passed to Rect.constructor");
+            throw Error("Bad signature passed to Rect.parseArgs");
         }
 
-        this._position = new Vector2(x, y);
-        this._size = new Vector2(width, height);
+        return [x, y, width, height];
+    }
 
-        this._offset = new Vector2(0, 0);
-        this.scale = [1, 1];
+    toString() {
+        return [this.x, this.y, this.width, this.height].toString()
     }
 
     set(...args) {
-        let size, position;
-        let width, height, x, y;
+        let width, height, x, y = Rect.parseArgs(...args);
 
-        // single Rect is passed
-        if (args.length === 1) {
-            [size, position] = [args[0].size, args[0].position];
-        }
-
-        // two arrays are passed
-        else if (args.length === 2) {
-            [size, position] = args;
-        }
-
-        // four numbers are passed
-        else if (args.length === 4) {
-            [width, height, x, y] = args;
-            size = [width, height];
-            position = [x, y];
-        }
-
-        else {
-            throw Error("Bad argument signature passed to Rect.set");
-        }
-
-        this.setSize(...size);
-        this.setPosition(...position);
+        this.setSize(width, height);
+        this.setPosition(x, y);
     }
 
     setSize(width, height) {
@@ -201,15 +196,21 @@ export class Rect {
         return this._offset.coordinates;
     }
 
+    get scale() {
+        return this._scale.coordinates;
+    }
+
     setScale(x, y) {
-        this.scale = [x, y];
+        this._scale.coordinates = [x, y];
     }
 
     setMirror(mx, my) {
-        this.scale = [
-            mx ? -1 : 1,
-            my ? -1 : 1
-        ]
+        let [sx, sy] = this.scale;
+
+        this.setScale(
+            sx * mx ? -1 : 1,
+            sx * my ? -1 : 1
+        );
     }
 
     get mirror() {
@@ -219,6 +220,14 @@ export class Rect {
             sx < 0,
             sy < 0
         ];
+    }
+
+    get angle() {
+        return this._rotation.angle;
+    }
+
+    setAngle(theta) {
+        this._rotation.angle = theta;
     }
 
     get width() {

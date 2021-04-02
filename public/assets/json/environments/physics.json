@@ -1,0 +1,44 @@
+{
+    "entities": [
+        {
+            "name": "Text Sprite",
+            "position": [0, 0],
+
+            "SpriteGraphicsInterface": {
+                "setText": ["abcde", "font.png", "fonts/font.json"]
+            }
+        },
+
+        {
+            "name": "Squirrel",
+            "position": [100, 50],
+            "group": "Sprite Group",
+
+            "SpriteGraphicsInterface": {
+                "setImageSubGraphics": ["squirrel2.png", [0, 0, 50, 50]]
+            }
+        }
+    ],
+
+    "layers": [
+        {
+            "name": "Sprite Layer",
+            "size": [800, 600],
+            "groups": "Sprite Group"
+        },
+
+        {
+            "name": "Circle Layer",
+            "size": [800, 600],
+            "layer": "Sprite Layer",
+
+            "SpriteGraphicsInterface": {
+                "setEntityTrackingLayer": "Squirrel"
+            }
+        }
+    ],
+
+    "groups": [
+        {"name": "Sprite Group"}
+    ]
+}

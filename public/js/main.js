@@ -70,8 +70,12 @@ const envContext = new Context(
     ]
 );
 
+const urlParams = new URLSearchParams(window.location.search);
+const envFile = `environments/${urlParams.get('env')}.json`;
+
+
 envContext.loadEnvironment(
-    'environments/main.json', 
+    envFile, 
     new ResourceManager(app.loader)
 ).then(entities => {
     console.log(entities);

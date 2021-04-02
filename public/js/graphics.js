@@ -1,3 +1,6 @@
+import { Rect } from "./geometry.js";
+
+
 export class Screen {
     constructor(container) {
         this.container = container;
@@ -28,7 +31,20 @@ class Graphics {
         throw Error("Graphics is an abstract base class, draw() should be implemented by a sub class");
     }
 }
- 
+
+
+function TransformSprite(sprite, offset=[0, 0], scale=[1, 1], angle=0, topLeft=false) {
+    let [ox, oy] = offset;
+    let [sx, sy] = scale;
+    angle *= (2 * Math.PI);
+
+    if (!topLeft) {
+        sprite.anchor.set(0.5, 0.5);
+    }
+
+    sprite.setTransform(sprite.x + ox, sprite.y + oy, sx, sy, angle);
+}
+
 
 export class ImageGraphics extends Graphics {
     constructor(entity, imageResource, scaleX=1, scaleY=1) {
@@ -44,7 +60,7 @@ export class ImageGraphics extends Graphics {
     }
 
     scaleSprite(sprite, scaleX, scaleY) {
-        sprite.setTransform(0, 0, scaleX, scaleY);
+        sprite.setTransform(sprite.x, sprite.y, scaleX, scaleY);
     }
     
     setScale(scaleX, scaleY) {
@@ -77,50 +93,86 @@ export class ImageGraphics extends Graphics {
     }
 }
 
-export class ImageSubGraphics extends ImageGraphics {
 
-    // entity is Entity object, image is canvasElement, rect is Rect object
-    constructor(entity, imageResource, rect=null, scaleX=1, scaleY=1) {
-        super(entity, imageResource, scaleX, scaleY);
+class TextureMap {
+    constructor(imageResource) {
+        this.imageResource = imageResource;
+        this._map = new Map();
+    }
 
-        this.baseTexture = imageResource.baseTexture;
+    getTexture(x, y, width, height) {
+        return new PIXI.Texture(
+            this.imageResource.baseTexture,
+            new PIXI.Rectangle(x, y, width, height)
+        );
+    }
 
-        this.sprites = [];
+    getSprite(key) {
+        return new PIXI.Sprite(this.get(key));
+    }
+
+    has(key) {
+        return this._map.has(key);
+    }
+
+    get(key) {
+        return this._map.get(key);
+    }
+
+    set(key, value) {
+        this._map.set(key, value);
+    }
+
+    setTexture(key, ...args) {
+        let [x, y, width, height] = Rect.parseArgs(...args);
+        this.set(key, this.getTexture(x, y, width, height));
+    }
+}
+
+
+export class SpriteSheetGraphics extends Graphics {
+    constructor(entity, imageResource) {
+        super(entity)
+
+        this.textureMap = new TextureMap(imageResource);
+        this.spriteMap = new Map();
+        this.rectMap = new Map();
+        this.activeSprites = []
+    }
+
+    addRect(...args) {
+        let rect = new Rect(...args);
         
-        if (rect) { this.addRect(rect); }
+        this.textureMap.setTexture(rect.toString(), rect);
+    }
+    
+    addSprite(key, rect) {
+        
+        if (!this.textureMap.has(rect.toString())) {
+            this.addRect(rect);
+        }
+        
+        let sprite = this.textureMap.getSprite(rect.toString());
+                
+        this.rectMap.set(key, rect);
+        this.spriteMap.set(key, sprite);
     }
 
-    addRect(rect) {
-        let [x, y] = rect.position;
-        let [w, h] = rect.size;
-        let [ox, oy] = rect.offset;
-        let [sx, sy] = rect.scale;
-        ox *= sx;
-        oy *= sy;
+    setSpritePosition(key) {
+        let sprite = this.spriteMap.get(key);
+        let rect = this.rectMap.get(key);
+        let [x, y] = this.entity.position;
+        sprite.x = x;
+        sprite.y = y;
 
-        let frame = new PIXI.Rectangle(x, y, w, h);
-        let texture = new PIXI.Texture(this.baseTexture, frame);
-        let sprite = new PIXI.Sprite(texture);
-
-        sprite.anchor.set(0.5, 0.5);
-        this.setSpriteOffset(sprite, ox, oy);
-        this.scaleSprite(sprite, sx, sy);
-
-        this.sprites.push(sprite);
-    }
-
-    setSpriteOffset(sprite, x, y) {
-        let [w, h] = [sprite.width, sprite.height];
-        x /= w;
-        y /= h;
-        sprite.anchor.x -= x;
-        sprite.anchor.y -= y;
+        TransformSprite(sprite, rect.offset, rect.scale, rect.angle);
     }
 
     draw(container) {
-        this.sprites.forEach(sprite => {
-            this.drawSprite(container, sprite, this.entity.position);
-        })
+        this.activeSprites.forEach(key => {
+            this.setSpritePosition(key);
+            container.addChild(this.spriteMap.get(key));
+        });
     }
 }
 
@@ -189,36 +241,127 @@ export class RectLayerGraphics extends LayerGraphics {
 
 }
 
-
-export class TextGraphics extends Graphics {
+export class CircleLayerGraphics extends LayerGraphics {
     constructor(entity) {
         super(entity);
 
-        this.image = null;
-        this.text = "";
-        this.style = {fontFamily : 'Arial', fontSize: 24, fill : 0xff1010, align : 'left'};
+        this.color = "";
+        this.circles = [];
     }
 
-    setText(text) {
-        if (this.text !== text) {
-            this.image = this.getImage(text);
+    setImage() {
+        super.setImage();
+        const container = this.image;
+
+        let graphics = new PIXI.Graphics();
+        graphics.lineStyle(1, this.color);
+
+        this.circles.forEach(({radius, position}) => {
+            let [x, y] = position;
+
+            graphics.drawCircle(x, y, radius);    
+        });
+
+        container.addChild(graphics);
+    }
+}
+
+
+export class Font {
+    constructor(imageResource, width, height, rowLength, chars, scale=1) {
+        this.size = [width, height];
+        this.rowLength = rowLength;
+        this.scale = scale;
+        this.chars = chars;
+        this.textureMap = new TextureMap(imageResource);
+        this.setCharTextures(chars);
+    }
+
+    setCharTextures(chars) {
+        for (let i in [...chars]) {
+            let char = chars[i];
+            let [row, col] = this.getCharPosition(i, this.rowLength);
+
+            this.addChar(char, row, col);
         }
     }
 
-    setPosition() {
-        let [x, y] = this.entity.position;
-        this.image.x = x;
-        this.image.y = y;
+    getCharPosition(i, rowLength) {
+        let row = Math.floor(i / rowLength)
+        let col = i % rowLength;
+
+        return [row, col];
     }
 
-    getImage(text) {
-        return new PIXI.Text(text, this.style);
+    addChar(key, row, col) {
+        let x, y;
+        let [width, height] = this.size;
+
+        x = col * width;
+        y = row * height;
+
+        this.textureMap.setTexture(key, x, y, width, height);
     }
 
-    draw(container) {        
-        if (this.image) {
-            this.setPosition();
-            container.addChild(this.image);
-        }        
+    getCharSprite(key, row=0, col=0, ox=0, oy=0) {
+        let [width, height] = this.size;
+
+        let texture = this.textureMap.get(key);
+        let sprite = new PIXI.Sprite(texture);
+
+        sprite.x = ox + (col * width * this.scale);
+        sprite.y = oy + (row * height * this.scale);
+
+        TransformSprite(sprite, [ox, oy], [this.scale, this.scale], 0, true);
+
+        return sprite;
+    }
+
+    getTextSprites(text, x, y, rowLength=false) {        
+        let sprites = [];
+        let [row, col] = [0, 0];
+
+        [...text].forEach((char, i) => {
+           
+            if (rowLength) {
+                [row, col] = this.getCharPosition(i, rowLength);
+            } else {
+                [row, col] = [0, i];
+            }
+
+            if (char !== " ") {
+                sprites.push(this.getCharSprite(char, row, col, x, y));
+            } else {
+                sprites.push(null);
+            }
+        });
+
+        return sprites;
+    }
+}
+
+
+export class TextGraphics extends Graphics {
+    constructor(entity, font) {
+        super(entity);
+
+        this.text = "";
+        this.font = font
+        this.sprites = [];
+    }
+
+    setText(text, rowLength=false) {
+        let [x, y] = this.entity.position
+        this.sprites = this.font.getTextSprites(text, x, y, rowLength);
+    }
+
+    setScale(scale) {
+        this.font.scale = scale;
+    }
+
+    draw(container) {
+        this.sprites.filter(sprite => sprite).forEach(sprite => {
+            container.addChild(sprite);
+        });
     }
 }

@@ -77,7 +77,6 @@ function getStateMethod(conditions, setBuffer) {
 
 function handleBuffer(to, setBuffer) {
     if (to.buffer) {
-        debugger;
         setBuffer(to.state);
     } else {
         return to.state;

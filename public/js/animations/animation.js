@@ -1,3 +1,4 @@
+import { SpriteSheetGraphics } from "../graphics.js";
 import { AnimationGraphics } from "./animationGraphics.js";
 
 export class Animation {
@@ -92,10 +93,10 @@ export class Animator {
     }
 
     setGraphics(image) {
-        this.entity.graphics = new AnimationGraphics(this.entity, image);
+        this.entity.addComponent('graphics', new SpriteSheetGraphics(this.entity, image));
 
         this.rectMap.forEach((value, key) => {
-            this.entity.graphics.addFrameSprite(key, value);
+            this.entity.graphics.addSprite(key, value);
         });
     }
 
