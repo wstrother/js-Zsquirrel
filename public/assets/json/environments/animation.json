@@ -72,10 +72,7 @@
             "groups": "HUD Group",
 
             "GameDebugInterface": {
-                "setAnimationRectLayer": [
-                    "Sheet Sprite",
-                    "Squirrel"
-                ]
+                "trackAnimationRects": ["Sheet Sprite", "Squirrel"]
             }
         }
     ]

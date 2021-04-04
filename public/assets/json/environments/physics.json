@@ -37,22 +37,6 @@
                 "trackComponentVectors": ["physics", "_velocity", "0xFF0101", "Sprite Group", 10],
                 "trackEntityPoints": ["position", "0xFFFF00", 5, "Sprite Group"]
             }
-        },
-
-        {
-            "name": "Collision Layer",
-            "size": [800, 600],
-            "layer": "Sprite Layer",
-
-            "CollisionLayerInterface": {
-                "addWalls": [
-                    [[50, 50], [50, 150]]
-                ]
-            },
-
-            "GameDebugInterface": {
-                "trackEntityVectors": ["face", "0x00FFFF", "Walls Group"]
-            }   
         }
     ],
 

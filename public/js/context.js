@@ -175,7 +175,11 @@ class EnvironmentLoader {
                     try {
                         i[methodName](entity, ...this.getArgs(args));
                     } catch (error) {
-                        console.warn(`${methodName} not a method on ${name}`);
+                        if (error.message === 'i[methodName] is not a function') {
+                            console.warn(`${methodName} not a method on ${name}`);
+                        } else {
+                            throw error;
+                        }
                     }
                 });
             }

@@ -34,12 +34,9 @@
                 "setImageSubGraphics": ["squirrel.png", [0, 0, 50, 50]]
             },
 
-            "GameControllerInterface": {
-                "addUdlr": ["Keyboard Controller", 5]                
-            },
-
             "GameDebugInterface": {
-                "updateModelValue": ["squirrel_position", "position"]
+                "updateModelValue": ["squirrel_position", "position"],
+                "addUdlr": ["Keyboard Controller", 5] 
             }
         },
 
@@ -77,7 +74,8 @@
 
             "CollisionLayerInterface": {
                 "addWalls": [
-                    [[50, 50], [50, 150]]
+                    [[50, 50], [50, 150]],
+                    [[350, 50], [350, 150]]
                 ]
             }
         }

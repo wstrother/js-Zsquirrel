@@ -1,68 +1,13 @@
 import { parseStateMachine, StateMachine } from "../states/stateMachine.js";
 import { Physics } from "../physics/physics.js";
 import { Vector2 } from "../geometry.js";
-
-
-// class Movement {
-//     constructor(entity) {
-//         this.entity = entity;
-//         this._heading = new Vector2(1, 0);
-//     }
-
-//     get heading() {
-//         return this._heading.coordinates;
-//     }
-
-//     get x() {
-//         return this._heading.x;
-//     }
-
-//     get y() {
-//         return this._heading.y;
-//     }
-
-//     get dirString() {
-//         let [x, y] = this.heading;
-
-//         if (x == 1) {
-//             return 'right';
-//         }
-
-//         if (x == -1) {
-//             return 'left';
-//         }
-
-//         if (y == -1) {
-//             return 'up';
-//         }
-
-//         if (y == 1) {
-//             return 'down';
-//         }
-
-//         return '';
-//     }
-
-//     reverse() {
-//         this._heading.x *= -1;
-//     }
-
-//     update() {
-//         let pivot = this.entity.animator.current.includes('pivot');
-
-//         if (pivot && animation_done(this.entity)) {
-//             console.log("Heading changed");
-//             this.reverse();
-//         }
-//     }
-// }
+import controls from './methods/controls.js';
+import conditions from './methods/states/conditions.js';
 
 
 export class EntityBehaviorInterface {
     constructor(context) {
         this.context = context;
-
-        this.conditionMap = new Map();
     }
 
     setPhysics(entity, accel, friction) {
@@ -77,19 +22,11 @@ export class EntityBehaviorInterface {
     }
 
     setMovementControls(entity, controller) {
-        entity.updateMethods.push(() => {
-            let [u, d, l, r] = ["up", "down", "left", "right"].map(d => controller.devices.get(d));
-            let [dx, dy] = [0, 0];
-    
-            if (u.held) { dy = -1 }
-            if (d.held) { dy = 1 }
-            if (l.held) { dx = -1 }
-            if (r.held) { dx = 1 }
-    
-            if (dx !== 0 || dy !== 0) {
-                entity.events.emit('move', dx, dy);
-            }
-        });
+        const emitMove = controls.mapUdlr(
+            (dx, dy) => entity.events.emit('move', dx, dy)
+        );
+
+        controls.setControls(entity, controller, emitMove);
     }
 
     setAnimationMachine(entity, controller, data) {
@@ -108,8 +45,17 @@ export class EntityBehaviorInterface {
             );
         });
 
-        this.setConditions(entity, controller);
-        parseStateMachine(stateMachine, data, this.conditionMap);
+        const conditionMap = this.getConditions(
+            conditions,
+            {entity, controller},
+            'animation_done'
+        );
+
+        parseStateMachine(
+            stateMachine, 
+            data, 
+            conditionMap
+        );
     }
 
     getAnimationName(entity) {
@@ -132,69 +78,19 @@ export class EntityBehaviorInterface {
         }
     }
 
-    setConditions(entity, controller) {
-        let add = (name, m, ...args) => { 
-            this.conditionMap.set(name, () => m(...args));
+    getConditions(methodObj, argObj, autoKey) {
+        const conditionMap = new Map();
+
+        let add = (name, m) => { 
+           conditionMap.set(name, () => m(argObj));
         }
 
-        add('auto', animation_done, entity);
-        add('dpad_forward', dpad_forward, entity, controller);
-        add('dpad_backward', dpad_backward, entity, controller);
-        add('press_start', press_start, controller);
-        add('dpad_x_neutral', dpad_x_neutral, controller);
+        Object.keys(methodObj).forEach(key => {
+            add(key, methodObj[key]);
+        })
+
+        add('auto', methodObj[autoKey]);
+
+        return conditionMap
     }
-}
-
-
-function animation_done(entity) {
-    let animation = entity.animator.currentAnimation;
-
-    return (animation.frameCount === animation.length - 1)
-}
-
-function press_start(controller) {
-    let start = controller.devices.get('start');
-
-    return start.check();
-}
-
-function dpad_forward(entity, controller) {
-    let [u, d, l, r] = ["up", "down", "left", "right"].map(d => controller.devices.get(d));
-
-    let [dx, dy] = [0, 0];
-    
-    // if (u.held) { dy = -1 }
-    // if (d.held) { dy = 1 }
-    if (l.held) { dx = -1 }
-    if (r.held) { dx = 1 }
-
-    let forward = Math.sign(dx) === Math.sign(entity.physics.heading[0]);
-
-    return forward;
-}
-
-function dpad_backward(entity, controller) {
-    let [u, d, l, r] = ["up", "down", "left", "right"].map(d => controller.devices.get(d));
-
-    let [dx, dy] = [0, 0];
-    
-    // if (u.held) { dy = -1 }
-    // if (d.held) { dy = 1 }
-    if (l.held) { dx = -1 }
-    if (r.held) { dx = 1 }
-
-    let backward = Math.sign(dx) === -Math.sign(entity.physics.heading[0]);
-
-    return backward;
-}
-
-function dpad_x_neutral(controller) {
-    let [u, d, l, r] = ["up", "down", "left", "right"].map(d => controller.devices.get(d));
-
-    let [dx, dy] = [0, 0];
-    if (l.held) { dx = -1 }
-    if (r.held) { dx = 1 }
-
-    let neutral = dx === 0;
-    return neutral;
 }

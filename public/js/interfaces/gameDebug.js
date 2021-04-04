@@ -1,7 +1,7 @@
 import { Layer } from "../entities.js";
-import { Rect } from "../geometry.js";
 import { ShapeLayerGraphics, Font, TextGraphics } from "../graphics.js";
 import debug from './methods/debug.js';
+import controls from './methods/controls.js';
 
 export class GameDebugInterface {
     constructor(context) {
@@ -14,7 +14,10 @@ export class GameDebugInterface {
         let [width, height] = size;
 
         this.font = new Font(fontImage, width, height, rowLength, chars, scale || 1);
+        this.context.model.set('Debug Font', this.font);
     }
+
+    // common component setters
 
     setTextGraphics(entity) {
         if (!this.font) {
@@ -29,99 +32,127 @@ export class GameDebugInterface {
         entity.graphics.color = color;
     }
 
-    trackEntityShapes(layer, color, getShape, getEntities) {
-        const subName = `Debug Layer (color: '${color}')`;
-        const subLayer = new Layer(subName);
-        this.context.model.set(subName, subLayer);
-        this.setShapeLayerGraphics(subLayer, color);
+    // graphically tracking properties
 
-        layer.events.listen('spawn', () => {
-            subLayer.setLayer(layer);
+    makeShapeLayer(parentLayer, color, getShapes, name='') {
+        const layerName = `Debug ${name} Layer (color: '${color}')`;
+        const layer = new Layer(layerName);
+        this.context.model.set(layerName, layer);
+
+        this.setShapeLayerGraphics(layer, color);
+
+        parentLayer.events.listen('spawn', () => {
+            layer.setLayer(parentLayer);
         });
 
-        subLayer.updateMethods.push(debug.getShapeGraphicsUpdate(
-            subLayer,
-            getShape,
-            getEntities
-        ));
+        layer.updateMethods.push(
+            debug.getShapesUpdate(
+                layer,
+                getShapes
+            )
+        );
+
+        return layer;
     }
 
     trackPoint(layer, name, color, radius, ...entities) {
-        const getCircle = debug.getCircleArg(
-            debug.entityPropertyGetter(name), 
+        const getCircle = debug.getCircle(
+            (entity) => entity[name],
             radius
         );
 
-        this.trackEntityShapes(
+        const getShapes = debug.getShapeCallback(
+            getCircle, () => entities
+        );
+
+        this.makeShapeLayer(
             layer, 
             color, 
-            getCircle, 
-            () => entities
+            getShapes,
+            name
         );
     }
 
     trackEntityPoints(layer, name, color, radius, group) {
-        const getCircle = debug.getCircleArg(
-            debug.entityPropertyGetter(name), 
+        const getCircle = debug.getCircle(
+            (entity) => entity[name],
             radius
         );
 
-        this.trackEntityShapes(
+        const getShapes = debug.getShapeCallback(
+            getCircle, () => group.entities
+        );
+
+        this.makeShapeLayer(
             layer, 
             color, 
-            getCircle, 
-            () => group.entities
+            getShapes,
+            name
         );
     }
 
     trackVector(layer, name, color, ...entities) {
-        const getVector = debug.getVectorArg(
-            debug.entityPropertyGetter(name)
+        const getVector = debug.getVector(
+            (entity) => entity[name]
         );
 
-        this.trackEntityShapes(
+        const getShapes = debug.getShapeCallback(
+            getVector, () => entities
+        );
+
+        this.makeShapeLayer(
             layer, 
             color, 
-            getVector, 
-            () => entities
+            getShapes,
+            name
         );
     }
 
     trackEntityVectors(layer, name, color, group, scale=1) {
-        const getVector = debug.getVectorArg(
-            debug.entityPropertyGetter(name),
+        const getVector = debug.getVector(
+            (entity) => entity[name],
             (entity) => entity.position,
             scale
         );
+
+        const getShapes = debug.getShapeCallback(
+            getVector, () => group.entities
+        );
         
-        this.trackEntityShapes(
+        this.makeShapeLayer(
             layer, 
             color, 
-            getVector, 
-            () => group.entities
+            getShapes,
+            name
         );
     }
 
     trackComponentVectors(layer, component, name, color, group, scale=1) {
-        const getVector = debug.getVectorArg(
-            debug.componentPropertyGetter(component, name),
+        const getVector = debug.getVector(
+            (entity) => entity[component][name],
             (entity) => entity.position,
             scale
         );
 
-        this.trackEntityShapes(
+        const getShapes = debug.getShapeCallback(
+            getVector, () => group.entities
+        );
+
+        this.makeShapeLayer(
             layer, 
             color, 
-            getVector, 
-            () => group.entities
+            getShapes,
+            name
         );
     }
 
-    setAnimationRectLayer(layer, imageSprite, animSprite) {
-        const rectLayer = new Layer(`${animSprite.name}'s Animation Frame Rect HUD`);
-        this.context.addEntity(rectLayer);
-
-        rectLayer.setLayer(layer);
+    trackAnimationRects(layer, imageSprite, animSprite, color) {
+        const rectLayer = this.makeShapeLayer(
+            layer,
+            color,
+            () => animSprite.animator.currentRects,
+            'animation rects'
+        );
 
         rectLayer.events.listen('spawn', () => {
             let image = imageSprite.graphics.sprite;
@@ -129,30 +160,19 @@ export class GameDebugInterface {
             rectLayer.setSize(image.width, image.height);
             rectLayer.setPosition(...imageSprite.position);
         });
-
-        const graphics = new ShapeLayerGraphics(rectLayer);
-        rectLayer.addComponent('graphics', graphics, true);
-        graphics.color = "0xff1010";
-
-        rectLayer.updateMethods.push(() => {
-            let rects = animSprite.animator.currentRects;
-            rectLayer.graphics.shapes = rects;
-        });
     }
 
+    // controller methods
+
     setAnimationCycler(entity, controller) {
-        
-        controller.updateMethods.push(() => {
-            let [l, r] = ["left", "right"].map(d => controller.devices.get(d));
-            let direction = 0;
+        controls.setUiControls(
+            controller,
 
-            if (l.check()) { direction--; }
-            if (r.check()) { direction++; }
-
-            if (direction !== 0) {
-                entity.events.emit('cycleAnimation', direction);
-            }
-        });
+            controls.mapUdlr(
+                dx => entity.events.emit('cycleAnimation', dx),
+                true
+            )
+        );
         
         entity.events.listen('cycleAnimation', (direction) => {
             let animator = entity.animator;
@@ -165,24 +185,35 @@ export class GameDebugInterface {
             i = i % animations.length;
 
             animator.setAnimation(animations[i]);
-        });
-    }
 
-    setPauseButton(entity, controller) {
-       controller.updateMethods.push(() => {
-            let start = controller.devices.get("start");
-            let a = controller.devices.get("A");
-            
-            if (start.check()) {
-                let paused = !entity.paused;
-                entity.setPaused(paused);
-            }
-
-            if (a.check() && entity.paused) {
+            if (entity.paused) {
                 entity.update();
             }
         });
     }
+
+    addUdlr(entity, controller, speed=1) {
+        const moveEntity = controls.mapUdlr(
+            (dx, dy) => entity.move(dx * speed, dy * speed)
+        );
+        
+        controls.setControls(entity, controller, moveEntity);
+    }
+
+    setPauseButton(entity, controller) {
+        controls.setUiControls(
+            controller,
+
+            controls.mapButton(
+                'start', () => entity.setPaused(!entity.paused)),
+            
+            controls.mapButton(
+                'A', () => entity.update(),
+                () => entity.paused)
+        );
+    }
+
+    // HUD / model value reporting
 
     updateModelValue(entity, key, name) {
         entity.updateMethods.push(() => {
