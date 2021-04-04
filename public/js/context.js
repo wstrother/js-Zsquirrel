@@ -78,8 +78,10 @@ class EnvironmentLoader {
             layers = envJson.layers || [];
             entities = envJson.entities || [];
 
-            // then add Entity instances
+            // initialize Interface classes
             this.handleInterfaces(interfaces);
+
+            // then add Entity and Group instances
             this.createGroups(groups);
             this.createLayers(layers);
             this.createEntities(entities);
@@ -88,9 +90,13 @@ class EnvironmentLoader {
 
             // then call setAttribute methods on entities
             allEntities.forEach(data => {
-
                 let entity = this.context.model.get(data.name);
                 this.setEntityAttributes(entity, data);
+            });
+
+            // then call Interface methods on entities
+            allEntities.forEach(data => {
+                let entity = this.context.model.get(data.name);
                 this.setInterfaceMethods(entity, data);
 
             });
@@ -100,22 +106,25 @@ class EnvironmentLoader {
     }
 
     createGroups(groups) {
-        groups.forEach(data => {
-            const newGroup = new Group(data.name);
-            this.context.model.set(data.name, newGroup);
+        groups.forEach(name => {
+            if (!this.context.model.has(name)) {
+                const newGroup = new Group(name);
+                this.context.model.set(name, newGroup);
+            }
         })
     }
 
+    
     createEntities(entities) {
         entities.forEach(data => {
             let entClass = this.getValue(data.class) || Entity;
-
+            
             const newEntity = new entClass(data.name);
             this.context.model.set(data.name, newEntity);
             this.entities.push(newEntity);
         });
     }
-
+    
     createLayers(layers) {
         layers.forEach(data => {
             const newLayer = new Layer(data.name);
@@ -124,10 +133,19 @@ class EnvironmentLoader {
         });
     }
 
-    getArgs(value) {
+    parseGroupArgs(args) {
+        let groups = args.filter(arg => typeof(arg) === 'string');
+        this.createGroups(groups);
+    }
+    
+    getArgs(value, groups=false) {
         let args;
         if (!Array.isArray(value)) { args = [value]; }
         else { args = value; }
+
+        if (groups) {
+            this.parseGroupArgs(args);
+        }
 
         // replace arguments with values from model where
         // there is a matching key and return args as array
@@ -139,9 +157,11 @@ class EnvironmentLoader {
         // checks entity for 'setKey' method for each key in entity data
         Object.entries(data).forEach(([key, value]) => {
             let setAttr = 'set' + key.charAt(0).toUpperCase() + key.slice(1)
+
+            let groups = ['setGroup', 'setGroups'].includes(setAttr);
             
             if (setAttr in entity) {
-                entity[setAttr](...this.getArgs(value));
+                entity[setAttr](...this.getArgs(value, groups));
             }
         });
     }
@@ -152,7 +172,11 @@ class EnvironmentLoader {
                 let i = this.context.interfaces.get(name);
 
                 Object.entries(iData).forEach(([methodName, args]) => {
-                    i[methodName](entity, ...this.getArgs(args));
+                    try {
+                        i[methodName](entity, ...this.getArgs(args));
+                    } catch (error) {
+                        console.warn(`${methodName} not a method on ${name}`);
+                    }
                 });
             }
         });

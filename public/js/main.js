@@ -6,6 +6,7 @@ import { GameControllerInterface } from './interfaces/gameController.js';
 import { GameDebugInterface } from './interfaces/gameDebug.js';
 import { Controller } from './controller/controller.js';
 import { EntityBehaviorInterface } from "./interfaces/entityBehavior.js";
+import { CollisionLayerInterface } from "./interfaces/collisionLayer.js";
 
 const app = new PIXI.Application();
 PIXI.settings.SCALE_MODE = PIXI.SCALE_MODES.NEAREST;
@@ -63,7 +64,8 @@ const envContext = new Context(
         SpriteGraphicsInterface,
         EntityBehaviorInterface,
         GameControllerInterface,
-        GameDebugInterface
+        GameDebugInterface,
+        CollisionLayerInterface
     ],
     [
         Controller
@@ -73,12 +75,12 @@ const envContext = new Context(
 const urlParams = new URLSearchParams(window.location.search);
 const envFile = `environments/${urlParams.get('env')}.json`;
 
-
 envContext.loadEnvironment(
     envFile, 
     new ResourceManager(app.loader)
 ).then(entities => {
-    console.log(entities);
+    console.log('entities', entities);
+    console.log('model', envContext.model);
     
     const env = new Environment(entities);
     const scr = new Screen(app.stage);
@@ -86,5 +88,5 @@ envContext.loadEnvironment(
 
     app.ticker.add(time => {
         game.update(time);
-    })
+    });
 });

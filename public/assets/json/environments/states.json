@@ -40,10 +40,5 @@
             "size": [800, 600],
             "groups": ["Debug Group"]
         }
-    ],
-
-    "groups": [
-        { "name": "Sprite Group" },
-        { "name": "Debug Group"}
     ]
 }

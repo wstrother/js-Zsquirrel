@@ -1,5 +1,4 @@
 import { SpriteSheetGraphics } from "../graphics.js";
-import { AnimationGraphics } from "./animationGraphics.js";
 
 export class Animation {
     constructor(name) {
@@ -102,13 +101,13 @@ export class Animator {
 
     setAnimation(name) {
         if (this.current !== name) {
+            console.log(name);
 
             if (this.currentAnimation) {
                 this.currentAnimation.reset();
             }
             this.current = name;
         }
-
     }
 
     update() {

@@ -128,18 +128,19 @@ export class Layer extends Entity {
         super(name);
 
         this._size = new Vector2(0, 0);
+        this._scale = new Vector2(1, 1);
         this.entities = [];
         this.addComponent('graphics', new LayerGraphics(this));
     }
-
+    
     addEntity(entity) {
         this.entities.push(entity);
     }
 
     addGroup(group) {
-        group.callOnEntities(entity => {
+        group.callOnEntities((entity) => {
             entity.setLayer(this);
-        })
+        });
     }
 
     setGroups(...groups) {
@@ -154,22 +155,23 @@ export class Layer extends Entity {
 
     setSize(...size) {
         this._size.set(...size);
+    }
 
-        if (this.graphics) {
-            this.graphics.setSize(...size);
-        }
+    get scale() {
+        return this._scale.coordinates;
     }
 
     setScale(sx, sy) {
-        if (this.graphics) {
-            this.graphics.setScale(sx, sy);
-        }
+        this._scale.set(sx, sy);
     }
 
     update(...args) {
+        // update entities first
+        this.entities.filter(entity => !entity.paused)
+            .forEach(entity => entity.update(...args));
+        
+        // then call layer update methods
         super.update(...args);
-
-        this.entities.forEach(entity => entity.update(...args));
     }
 
 }

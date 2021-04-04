@@ -7,12 +7,16 @@ export class Vector2 {
         this.y = y;
     }
 
+    getCopy() {
+        return new Vector2(this);
+    }
+
     static parseArgs(...args) {
         let x, y;
 
         // Vector2 was passed
         if (args.length === 1) {
-            [x, y] = args[0].x, args[0].y;
+            [x, y] = [args[0].x, args[0].y];
 
         // [x, y] was passed
         } else if (args.length === 2) {
@@ -41,6 +45,20 @@ export class Vector2 {
         return Math.sqrt(this.x ** 2 + this.y ** 2);
     }
 
+    setMagnitude(m) {
+        let m0 = this.magnitude;
+        if (m0 !== 0) {
+            let r = m / m0;
+            this.x *= r;
+            this.y *= r;
+        } else {
+            this.x = m;
+            this.y = 0;
+        }
+
+        return this;
+    }
+
     // get rotation in terms of Tau Radians (i.e. 1 = a full rotation)
     get angle() {
         let angle = Math.atan2(-this.y, this.x);
@@ -56,9 +74,11 @@ export class Vector2 {
         }
     }
 
-    set angle(angle) {
+    setAngle(angle) {
         let delta = angle - this.angle;
         this.rotate(delta);
+
+        return this;
     }
 
     // adjust the angle in Tau Radians (i.e. 1 = a full rotation) 
@@ -86,6 +106,8 @@ export class Vector2 {
     scale(magnitude) {
         this.x *= magnitude;
         this.y *= magnitude;
+
+        return this;
     }
 
     multiply(...args) {
@@ -100,6 +122,8 @@ export class Vector2 {
 
         this.x = i;
         this.y = j;
+
+        return this;
     }
 
     // alters Vector2 instance in place
@@ -108,6 +132,8 @@ export class Vector2 {
 
         this.x = this.x + dx;
         this.y = this.y + dy;
+
+        return this;
     }
 }
 
@@ -162,7 +188,8 @@ export class Rect {
     }
 
     toString() {
-        return [this.x, this.y, this.width, this.height].toString()
+        let key = [this.top, this.left, this.width, this.height].toString();
+        return key
     }
 
     set(...args) {

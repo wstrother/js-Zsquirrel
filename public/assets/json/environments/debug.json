@@ -1,0 +1,85 @@
+{
+    "interfaces": {
+        "GameDebugInterface": {
+            "setFont": ["font.png", "fonts/font.json"]
+        }
+    },
+
+    "entities": [
+        {
+            "name": "DT Hud",
+            "group": "HUD Group",
+
+            "GameDebugInterface": {
+                "reportModelAverage": ["dt", 5]
+            }
+        },
+
+        {
+            "name": "Squirrel Position Hud",
+            "group": "HUD Group",
+            "position": [150, 0],
+
+            "GameDebugInterface": {
+                "reportModelValue": ["squirrel_position", 5]
+            }
+        },
+
+        {
+            "name": "Squirrel",
+            "group": "Sprite Group",
+            "position": [100, 100],
+
+            "SpriteGraphicsInterface": {
+                "setImageSubGraphics": ["squirrel.png", [0, 0, 50, 50]]
+            },
+
+            "GameControllerInterface": {
+                "addUdlr": ["Keyboard Controller", 5]                
+            },
+
+            "GameDebugInterface": {
+                "updateModelValue": ["squirrel_position", "position"]
+            }
+        },
+
+        {
+            "name": "Keyboard Controller",
+            "class": "Controller",
+
+            "GameControllerInterface": {
+                "setControllerDevices": "controllers/keyboard.json"
+            }
+        }
+    ],
+
+    "layers": [
+        {
+            "name": "Sprite Layer",
+            "groups": "Sprite Group",
+            "size": [800, 600],
+            "scale": [2, 2],
+
+            "GameDebugInterface": {
+                "setPauseButton": "Keyboard Controller",
+                "trackPoint": ["position", "0xFF0101", 5, "Squirrel"],
+                "trackVector": ["_position", "0x00FF00", "Squirrel"],
+                "trackEntityPoints": ["position", "0xFFFF00", 5, "Walls Group"],
+                "trackEntityVectors": ["face", "0x00FFFF", "Walls Group"]
+            }            
+        },
+
+        {
+            "name": "Walls Layer",
+            "size": [300, 400],
+            "layer": "Sprite Layer",
+            "groups": "Walls Group",
+
+            "CollisionLayerInterface": {
+                "addWalls": [
+                    [[50, 50], [50, 150]]
+                ]
+            }
+        }
+    ]
+}

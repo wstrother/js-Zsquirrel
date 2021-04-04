@@ -1,5 +1,6 @@
 import { parseStateMachine, StateMachine } from "../states/stateMachine.js";
-import { Movement } from "../physics/physics.js";
+import { Physics } from "../physics/physics.js";
+import { Vector2 } from "../geometry.js";
 
 
 // class Movement {
@@ -64,11 +65,38 @@ export class EntityBehaviorInterface {
         this.conditionMap = new Map();
     }
 
+    setPhysics(entity, accel, friction) {
+        entity.addComponent('physics', new Physics(entity));
+        entity.events.listen('move', (dx, dy) => {
+            let force = new Vector2(dx, dy);
+            force.setMagnitude(accel);
+            entity.physics.applyForce(force);
+        });
+
+        entity.physics.friction = friction;
+    }
+
+    setMovementControls(entity, controller) {
+        entity.updateMethods.push(() => {
+            let [u, d, l, r] = ["up", "down", "left", "right"].map(d => controller.devices.get(d));
+            let [dx, dy] = [0, 0];
+    
+            if (u.held) { dy = -1 }
+            if (d.held) { dy = 1 }
+            if (l.held) { dx = -1 }
+            if (r.held) { dx = 1 }
+    
+            if (dx !== 0 || dy !== 0) {
+                entity.events.emit('move', dx, dy);
+            }
+        });
+    }
+
     setAnimationMachine(entity, controller, data) {
         let stateMachine = new StateMachine(entity, 'default');
 
         entity.addComponent('states', stateMachine);
-        entity.addComponent('movement', new Movement(entity));
+        entity.addComponent('physics', new Physics(entity));
 
         entity.events.listen('stateChange', (state) => {
             console.log(`${entity.name}.state changed to ${state}`);
@@ -92,7 +120,7 @@ export class EntityBehaviorInterface {
             state = "default";
         }
 
-        let dirState = `${state}_${entity.movement.dirString}`;
+        let dirState = `${state}_${entity.physics.dirString}`;
 
         if (names.includes(dirState)) {
             return dirState;
@@ -140,7 +168,7 @@ function dpad_forward(entity, controller) {
     if (l.held) { dx = -1 }
     if (r.held) { dx = 1 }
 
-    let forward = Math.sign(dx) === Math.sign(entity.movement.x);
+    let forward = Math.sign(dx) === Math.sign(entity.physics.heading[0]);
 
     return forward;
 }
@@ -155,7 +183,7 @@ function dpad_backward(entity, controller) {
     if (l.held) { dx = -1 }
     if (r.held) { dx = 1 }
 
-    let backward = Math.sign(dx) === -Math.sign(entity.movement.x);
+    let backward = Math.sign(dx) === -Math.sign(entity.physics.heading[0]);
 
     return backward;
 }

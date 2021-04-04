@@ -1,37 +1,23 @@
 {
+    "interfaces": {
+        "GameDebugInterface": {
+            "setFont": ["font.png", "fonts/font.json"]
+        }
+    },
+    
     "entities": [
         {
             "name": "Squirrel",
             "group": "Sprite Group",
+            "position": [50, 50],
 
             "SpriteGraphicsInterface": {
-                "setGraphics": ["link.png", [4, 17, 34, 33]],
-                "setAnimation": ["animations/new_link.json", "link.png"]
+                "setAnimation": ["animations/squirrel.json", "squirrel.png"]
             },
 
             "GameDebugInterface": {
                 "setAnimationCycler": "Keyboard Controller",
                 "setPauseButton": "Keyboard Controller"
-            }
-        },
-
-        {
-            "name": "Image UI",
-            "position": [0, 100],
-            "group": "Image Group",
-
-            "SpriteGraphicsInterface": {
-                "setImage": "link.png"
-            }
-        },
-
-        {
-            "name": "State HUD",
-            "position": [150, 20],
-            "group": "UI Group",
-            
-            "GameDebugInterface": {
-                "setStateHud": "Squirrel"
             }
         },
 
@@ -45,11 +31,30 @@
 
         {
             "name": "DT Hud",
-            "position": [455, 10],
-            "group": "UI Group",
+            "group": "HUD Group",
 
             "GameDebugInterface": {
-                "setModelValue": ["dt"]
+                "reportModelAverage": ["dt", 5]
+            }
+        },
+
+        {
+            "name": "Sheet Sprite",
+            "position": [100, 150],
+            "group": "HUD Group",
+
+            "SpriteGraphicsInterface": {
+                "setImage": "squirrel.png"
+            }
+        },
+
+        {
+            "name": "State HUD",
+            "position": [150, 0],
+            "group": "HUD Group",
+            
+            "GameDebugInterface": {
+                "animationStateHud": ["Squirrel", 5]
             }
         }
     ],
@@ -57,25 +62,21 @@
     "layers": [
         {
             "name": "Animation Layer",
-            "size": [800, 600],
-            "groups": [
-                "UI Group",
-                "Image Group",
-                "Sprite Group"
-            ],
+            "size": [400, 300],
+            "scale": [2, 2],
+            "groups": "Sprite Group"
+        },
+
+        {
+            "name": "HUD Layer",
+            "groups": "HUD Group",
 
             "GameDebugInterface": {
                 "setAnimationRectLayer": [
-                    "Image UI",
+                    "Sheet Sprite",
                     "Squirrel"
                 ]
             }
         }
-    ],
-
-    "groups": [
-        { "name": "UI Group" },
-        { "name": "Image Group" },
-        { "name": "Sprite Group" }
     ]
 }

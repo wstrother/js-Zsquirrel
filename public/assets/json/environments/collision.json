@@ -1,0 +1,62 @@
+{
+    "entities": [
+        {
+            "name": "Text Sprite",
+            "position": [150, 0],
+
+            "SpriteGraphicsInterface": {
+                "setValueText": ["font.png", "fonts/font.json", "Vector Sprite"]
+            }
+        },
+
+        {
+            "name": "Vector Sprite",
+            "position": [50, 0],
+            "group": "Sprite Group",
+
+            "GameControllerInterface": {
+                "addUdlr": ["Keyboard Controller", 0.05]
+            }
+        },
+
+        {
+            "name": "Keyboard Controller",
+            "class": "Controller",
+
+            "GameControllerInterface": {
+                "setControllerDevices": "controllers/keyboard.json"
+            }
+        }
+
+    ],
+
+    "layers": [
+        {
+            "name": "Sprite Layer",
+            "size": [800, 600],
+            "groups": "Sprite Group",
+            "scale": [2, 2],
+
+            "SpriteGraphicsInterface": {
+                "setVectorGuide": ["Vector Sprite", "Keyboard Controller"]
+            }
+        },
+
+        {
+            "name": "Collision Layer",
+            "size": [800, 600],
+            "layer": "Sprite Layer",
+
+            "SpriteGraphicsInterface": {
+                "setCollisionLayer": [
+                    [200, 0, 200, 300],
+                    [0, 150, 400, 150]
+                ]
+            }
+        }
+    ],
+
+    "groups": [
+        {"name": "Sprite Group"}
+    ]
+}

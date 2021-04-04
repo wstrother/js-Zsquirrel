@@ -1,40 +1,58 @@
 {
     "entities": [
         {
-            "name": "Text Sprite",
-            "position": [0, 0],
-
-            "SpriteGraphicsInterface": {
-                "setText": ["abcde", "font.png", "fonts/font.json"]
-            }
-        },
-
-        {
             "name": "Squirrel",
             "position": [100, 50],
             "group": "Sprite Group",
 
             "SpriteGraphicsInterface": {
                 "setImageSubGraphics": ["squirrel2.png", [0, 0, 50, 50]]
+            },
+
+            "EntityBehaviorInterface": {
+                "setPhysics": [0.5, 0.05],
+                "setMovementControls": ["Keyboard Controller"]
+            }
+        },
+
+        {
+            "name": "Keyboard Controller",
+            "class": "Controller",
+
+            "GameControllerInterface": {
+                "setControllerDevices": "controllers/keyboard.json"
             }
         }
+
     ],
 
     "layers": [
         {
             "name": "Sprite Layer",
             "size": [800, 600],
-            "groups": "Sprite Group"
+            "groups": "Sprite Group",
+            "scale": [2, 2],
+
+            "GameDebugInterface": {
+                "trackComponentVectors": ["physics", "_velocity", "0xFF0101", "Sprite Group", 10],
+                "trackEntityPoints": ["position", "0xFFFF00", 5, "Sprite Group"]
+            }
         },
 
         {
-            "name": "Circle Layer",
+            "name": "Collision Layer",
             "size": [800, 600],
             "layer": "Sprite Layer",
 
-            "SpriteGraphicsInterface": {
-                "setEntityTrackingLayer": "Squirrel"
-            }
+            "CollisionLayerInterface": {
+                "addWalls": [
+                    [[50, 50], [50, 150]]
+                ]
+            },
+
+            "GameDebugInterface": {
+                "trackEntityVectors": ["face", "0x00FFFF", "Walls Group"]
+            }   
         }
     ],
 

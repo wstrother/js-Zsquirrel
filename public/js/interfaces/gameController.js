@@ -26,27 +26,19 @@ export class GameControllerInterface {
         }
     }
 
-    addUdlr(entity, controller) {
-        this.addMovement(entity);
-
+    addUdlr(entity, controller, speed=1) {
         entity.updateMethods.push(() => {
             let [u, d, l, r] = ["up", "down", "left", "right"].map(d => controller.devices.get(d));
             let [dx, dy] = [0, 0];
     
-            if (u.held) { dy = -1 }
-            if (d.held) { dy = 1 }
-            if (l.held) { dx = -1 }
-            if (r.held) { dx = 1 }
+            if (u.held) { dy = -speed }
+            if (d.held) { dy = speed }
+            if (l.held) { dx = -speed }
+            if (r.held) { dx = speed }
     
             if (dx !== 0 || dy !== 0) {
-                entity.events.emit('move', dx, dy);
+                entity.move(dx, dy);
             }
         });
-    }
-
-    addMovement(entity) {
-        entity.events.listen('move', (dx, dy) => {
-            entity.move(dx * 10, dy * 10);
-        })
     }
 }

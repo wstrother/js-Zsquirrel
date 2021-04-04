@@ -142,12 +142,10 @@ export class SpriteSheetGraphics extends Graphics {
 
     addRect(...args) {
         let rect = new Rect(...args);
-        
         this.textureMap.setTexture(rect.toString(), rect);
     }
     
     addSprite(key, rect) {
-        
         if (!this.textureMap.has(rect.toString())) {
             this.addRect(rect);
         }
@@ -190,13 +188,18 @@ export class LayerGraphics extends Graphics {
         return this.screen.container;
     }
 
-    setSize(width, height) {
+    setSize() {
+        let [width, height] = this.entity.size;
+
         this.image.width = width;
         this.image.height = height;
     }
 
-    setScale(x, y) {
-        this.image.setTransform(0, 0, x, y);
+    setScale() {
+        this.image.setTransform(
+            ...this.entity.position, 
+            ...this.entity.scale
+        );
     }
 
     get subEntities() {
@@ -204,9 +207,8 @@ export class LayerGraphics extends Graphics {
     }
 
     setImage() {
-        let [x, y] = this.entity.position;
-        this.image.x = x;
-        this.image.y = y;
+        this.setSize();
+        this.setScale();
         this.screen.draw(this.subEntities);
     }
 
@@ -217,12 +219,13 @@ export class LayerGraphics extends Graphics {
     }
 }
 
-export class RectLayerGraphics extends LayerGraphics {
+export class ShapeLayerGraphics extends LayerGraphics {
     constructor(entity) {
         super(entity);
 
-        this.color = "";
-        this.rects = [];
+        this.shapes = [];
+        this.color = false;
+        this.lineWidth = false;
     }
 
     setImage() {
@@ -230,41 +233,105 @@ export class RectLayerGraphics extends LayerGraphics {
         const container = this.image;
 
         let graphics = new PIXI.Graphics();
-        graphics.lineStyle(1, this.color);
+        graphics.lineStyle(
+            this.lineWidth || 1, 
+            this.color || '0xFFFFFF'
+        );
 
-        this.rects.forEach((rect)=> {
-            graphics.drawRect(...rect.position, ...rect.size);    
-        });
-
-        container.addChild(graphics);
-    }
-
-}
-
-export class CircleLayerGraphics extends LayerGraphics {
-    constructor(entity) {
-        super(entity);
-
-        this.color = "";
-        this.circles = [];
-    }
-
-    setImage() {
-        super.setImage();
-        const container = this.image;
-
-        let graphics = new PIXI.Graphics();
-        graphics.lineStyle(1, this.color);
-
-        this.circles.forEach(({radius, position}) => {
-            let [x, y] = position;
-
-            graphics.drawCircle(x, y, radius);    
+        this.shapes.forEach(arg => {
+            drawShape(graphics, arg);    
         });
 
         container.addChild(graphics);
     }
 }
+
+function drawShape(graphics, arg) {
+    if (arg.radius) {
+        drawCircle(graphics, arg)
+    }
+
+    if (arg.size) {
+        drawRect(graphics, arg);
+    }
+
+    if (arg.vector) {
+        drawVector(graphics, arg);
+    }
+}
+
+function drawRect(graphics, arg) {
+    graphics.drawRect(...arg.position, ...arg.size);
+}
+
+function drawCircle(graphics, arg) {
+    let [x, y] = arg.position
+    graphics.drawCircle(x, y, arg.radius);
+}
+
+function drawVector(graphics, arg) {
+    let [x1, y1] = arg.position || [0, 0];
+    let [x2, y2] = arg.vector.add(x1, y1).coordinates;
+
+    graphics.moveTo(x1, y1);
+
+    graphics.lineTo(x2, y2);
+    graphics.drawCircle(x2, y2, 1);
+}
+
+// export class CircleLayerGraphics extends LayerGraphics {
+//     constructor(entity) {
+//         super(entity);
+
+//         this.color = "";
+//         this.circles = [];
+//     }
+
+//     setImage() {
+//         super.setImage();
+//         const container = this.image;
+
+//         let graphics = new PIXI.Graphics();
+//         graphics.lineStyle(1, this.color);
+
+//         this.circles.forEach(({radius, position}) => {
+//             let [x, y] = position;
+
+//             graphics.drawCircle(x, y, radius);    
+//         });
+
+//         container.addChild(graphics);
+//     }
+// }
+
+// export class VectorLayerGraphics extends LayerGraphics {
+//     constructor(entity) {
+//         super(entity);
+
+//         this.color = "";
+//         this.segments = [];
+//     }
+
+//     setImage() {
+//         super.setImage();
+//         const container = this.image;
+
+//         let graphics = new PIXI.Graphics();
+//         graphics.lineStyle(1, this.color);
+
+//         this.segments.forEach(({vector, position}) => {
+//             let [x, y] = position;
+//             let [dx, dy] = vector.add(x, y).coordinates;
+
+//             graphics.moveTo(x, y);
+
+//             graphics.lineTo(dx, dy);
+//             graphics.drawCircle(dx, dy, 1);
+//         });
+
+//         container.addChild(graphics);
+//     }
+// }
 
 
 export class Font {
@@ -345,7 +412,6 @@ export class TextGraphics extends Graphics {
     constructor(entity, font) {
         super(entity);
 
-        this.text = "";
         this.font = font
         this.sprites = [];
     }

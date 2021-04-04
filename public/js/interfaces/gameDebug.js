@@ -1,28 +1,120 @@
 import { Layer } from "../entities.js";
 import { Rect } from "../geometry.js";
-import { RectLayerGraphics, TextGraphics } from "../graphics.js";
+import { ShapeLayerGraphics, Font, TextGraphics } from "../graphics.js";
+import debug from './methods/debug.js';
 
 export class GameDebugInterface {
     constructor(context) {
         this.context = context;
+        this.font = null;
     }
 
-    setStateHud(entity, target) {
-        const graphics = new TextGraphics(entity);
-        entity.addComponent('graphics', graphics);
-        
-        entity.updateMethods.push(() => {
-            let animator = target.animator;
+    setFont(fontImage, fontData) {
+        let {size, rowLength, chars, scale} = fontData;
+        let [width, height] = size;
 
-            let text;
-            if (animator.currentAnimation) {
-                text = `${animator.currentAnimation.frameCount} ${animator.current}`;
-            }
-            else {
-                text = `No '${animator.current}' animation found`;
-            }
-            entity.graphics.setText(text);
+        this.font = new Font(fontImage, width, height, rowLength, chars, scale || 1);
+    }
+
+    setTextGraphics(entity) {
+        if (!this.font) {
+            throw Error('GameDebugInterface.font has not been initialized');
+        }
+
+        entity.addComponent('graphics', new TextGraphics(entity, this.font));
+    }
+
+    setShapeLayerGraphics(entity, color) {
+        entity.addComponent('graphics', new ShapeLayerGraphics(entity), true);
+        entity.graphics.color = color;
+    }
+
+    trackEntityShapes(layer, color, getShape, getEntities) {
+        const subName = `Debug Layer (color: '${color}')`;
+        const subLayer = new Layer(subName);
+        this.context.model.set(subName, subLayer);
+        this.setShapeLayerGraphics(subLayer, color);
+
+        layer.events.listen('spawn', () => {
+            subLayer.setLayer(layer);
         });
+
+        subLayer.updateMethods.push(debug.getShapeGraphicsUpdate(
+            subLayer,
+            getShape,
+            getEntities
+        ));
+    }
+
+    trackPoint(layer, name, color, radius, ...entities) {
+        const getCircle = debug.getCircleArg(
+            debug.entityPropertyGetter(name), 
+            radius
+        );
+
+        this.trackEntityShapes(
+            layer, 
+            color, 
+            getCircle, 
+            () => entities
+        );
+    }
+
+    trackEntityPoints(layer, name, color, radius, group) {
+        const getCircle = debug.getCircleArg(
+            debug.entityPropertyGetter(name), 
+            radius
+        );
+
+        this.trackEntityShapes(
+            layer, 
+            color, 
+            getCircle, 
+            () => group.entities
+        );
+    }
+
+    trackVector(layer, name, color, ...entities) {
+        const getVector = debug.getVectorArg(
+            debug.entityPropertyGetter(name)
+        );
+
+        this.trackEntityShapes(
+            layer, 
+            color, 
+            getVector, 
+            () => entities
+        );
+    }
+
+    trackEntityVectors(layer, name, color, group, scale=1) {
+        const getVector = debug.getVectorArg(
+            debug.entityPropertyGetter(name),
+            (entity) => entity.position,
+            scale
+        );
+        
+        this.trackEntityShapes(
+            layer, 
+            color, 
+            getVector, 
+            () => group.entities
+        );
+    }
+
+    trackComponentVectors(layer, component, name, color, group, scale=1) {
+        const getVector = debug.getVectorArg(
+            debug.componentPropertyGetter(component, name),
+            (entity) => entity.position,
+            scale
+        );
+
+        this.trackEntityShapes(
+            layer, 
+            color, 
+            getVector, 
+            () => group.entities
+        );
     }
 
     setAnimationRectLayer(layer, imageSprite, animSprite) {
@@ -38,13 +130,13 @@ export class GameDebugInterface {
             rectLayer.setPosition(...imageSprite.position);
         });
 
-        const graphics = new RectLayerGraphics(rectLayer);
+        const graphics = new ShapeLayerGraphics(rectLayer);
         rectLayer.addComponent('graphics', graphics, true);
         graphics.color = "0xff1010";
 
         rectLayer.updateMethods.push(() => {
             let rects = animSprite.animator.currentRects;
-            rectLayer.graphics.rects = rects;
+            rectLayer.graphics.shapes = rects;
         });
     }
 
@@ -80,7 +172,7 @@ export class GameDebugInterface {
        controller.updateMethods.push(() => {
             let start = controller.devices.get("start");
             let a = controller.devices.get("A");
-
+            
             if (start.check()) {
                 let paused = !entity.paused;
                 entity.setPaused(paused);
@@ -92,47 +184,54 @@ export class GameDebugInterface {
         });
     }
 
-    setModelValue(entity, key, interval=5) {
-        const graphics = new TextGraphics(entity);
-        entity.addComponent('graphics', graphics);
-
-        let frames = 0;
-        let last = "";
-        let cache = [];
-
-        const format = (t) => {
-            return Number.parseFloat(t).toPrecision(4);
-        }
-
-        const getText = () => {
-            let value = this.context.model.get(key);
-            
-            if (cache.length > interval) {
-                cache = cache.slice(1);
-            }
-            cache.push(value);
-            value = this.getAverage(cache);
-
-            let current = format(value);
-
-            if (frames % interval === 0) {
-                last = current;
-            }
-
-            frames++;
-
-            entity.graphics.setText(last);
-        }
-
-        entity.updateMethods.push(getText);
+    updateModelValue(entity, key, name) {
+        entity.updateMethods.push(() => {
+            this.context.model.set(key, entity[name]);
+        });
     }
 
-    getAverage(cache) {
-        let sum = 0;
-        cache.forEach(v => {
-            sum += v;
-        });
+    animationStateHud(entity, target, interval=1) {
+        const getAnimationState = () => {
+            let animator = target.animator;
 
-        return sum / cache.length;
+            if (animator.currentAnimation) {
+                return `${animator.currentAnimation.frameCount} ${animator.current}`;
+            }
+            else {
+                return `No '${animator.current}' animation found`;
+            }
+        }
+
+        this.reportValue(entity, getAnimationState, interval);
+    }
+
+    reportModelAverage(entity, key, interval=5) {
+        const getAverage = debug.getValueAverager(
+            () => this.context.model.get(key), 
+            interval
+        );
+
+        this.reportValue(
+            entity,
+            getAverage,
+            interval
+        );
+    }
+
+    reportModelValue(entity, key, interval=1) {
+        this.reportValue(
+            entity,
+            () => this.context.model.get(key),
+            interval
+        );
+    }
+
+    reportValue(entity, getValue, interval=1) {
+        this.setTextGraphics(entity);
+
+        entity.updateMethods.push(
+            debug.getIntervalSetText(entity, getValue, interval)
+        );
     }
 }
+
