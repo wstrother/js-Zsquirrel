@@ -1,45 +1,55 @@
-import { Layer } from "../entities.js";
+import { Entity, Layer } from "../entities.js";
 import { ShapeLayerGraphics, Font, TextGraphics } from "../graphics.js";
 import debug from './methods/debug.js';
 import controls from './methods/controls.js';
+import components from "./methods/components.js";
+import make from './methods/make/entities.js';
 
 export class GameDebugInterface {
     constructor(context) {
         this.context = context;
-        this.font = null;
+
+
+        let [fontImage, fontData] = [
+            this.context.getValue('debug-font.png'),
+            this.context.getValue('fonts/font.json')
+        ];
+        try {
+            this.defaultFont = this.getFont(fontImage, fontData);
+        } catch {
+            console.warn('No Debug Font was set because "font.png" or "fonts/debug.json" failed to load')
+        }
     }
 
-    setFont(fontImage, fontData) {
+    getFont(fontImage, fontData) {
         let {size, rowLength, chars, scale} = fontData;
         let [width, height] = size;
 
-        this.font = new Font(fontImage, width, height, rowLength, chars, scale || 1);
-        this.context.model.set('Debug Font', this.font);
+        let font = new Font(fontImage, width, height, rowLength, chars, scale || 1);
+        this.context.model.set('Debug Font', font);
+
+        return font
     }
 
     // common component setters
 
     setTextGraphics(entity) {
-        if (!this.font) {
+        if (!this.defaultFont) {
             throw Error('GameDebugInterface.font has not been initialized');
         }
 
-        entity.addComponent('graphics', new TextGraphics(entity, this.font));
+        components.addTextGraphics(entity, this.defaultFont);
     }
-
-    setShapeLayerGraphics(entity, color) {
-        entity.addComponent('graphics', new ShapeLayerGraphics(entity), true);
-        entity.graphics.color = color;
-    }
-
+    
     // graphically tracking properties
 
     makeShapeLayer(parentLayer, color, getShapes, name='') {
-        const layerName = `Debug ${name} Layer (color: '${color}')`;
-        const layer = new Layer(layerName);
-        this.context.model.set(layerName, layer);
-
-        this.setShapeLayerGraphics(layer, color);
+        let layer = make.addShapesLayer(
+            `Debug ${name} Layer (color: '${color}')`,
+            parentLayer,
+            color
+        );
+        this.context.model.set(layer.name, layer);
 
         parentLayer.events.listen('spawn', () => {
             layer.setLayer(parentLayer);
@@ -146,18 +156,26 @@ export class GameDebugInterface {
         );
     }
 
-    trackAnimationRects(layer, imageSprite, animSprite, color) {
+    trackAnimationRects(layer, target, color, position) {
         const rectLayer = this.makeShapeLayer(
             layer,
             color,
-            () => animSprite.animator.currentRects,
+            () => target.animator.currentRects,
             'animation rects'
         );
 
+        let imageSprite = make.addImageSprite(
+            'Animation Sheet Sprite',
+            target.graphics.textureMap.imageResource,
+            {position, layer}
+        );
+        this.context.model.set(imageSprite.name, imageSprite);
+        
         rectLayer.events.listen('spawn', () => {
-            let image = imageSprite.graphics.sprite;
-    
-            rectLayer.setSize(image.width, image.height);
+            rectLayer.setSize(
+                imageSprite.graphics.width, 
+                imageSprite.graphics.height
+            );
             rectLayer.setPosition(...imageSprite.position);
         });
     }

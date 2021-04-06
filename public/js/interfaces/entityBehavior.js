@@ -1,8 +1,8 @@
-import { parseStateMachine, StateMachine } from "../states/stateMachine.js";
-import { Physics } from "../physics/physics.js";
+import { parseStateMachine } from "../states/stateParser.js";
 import { Vector2 } from "../geometry.js";
 import controls from './methods/controls.js';
 import conditions from './methods/states/conditions.js';
+import components from './methods/components.js';
 
 
 export class EntityBehaviorInterface {
@@ -11,14 +11,13 @@ export class EntityBehaviorInterface {
     }
 
     setPhysics(entity, accel, friction) {
-        entity.addComponent('physics', new Physics(entity));
+        components.addPhysics(entity, friction);
+
         entity.events.listen('move', (dx, dy) => {
             let force = new Vector2(dx, dy);
             force.setMagnitude(accel);
             entity.physics.applyForce(force);
         });
-
-        entity.physics.friction = friction;
     }
 
     setMovementControls(entity, controller) {
@@ -30,32 +29,23 @@ export class EntityBehaviorInterface {
     }
 
     setAnimationMachine(entity, controller, data) {
-        let stateMachine = new StateMachine(entity, 'default');
-
-        entity.addComponent('states', stateMachine);
-        entity.addComponent('physics', new Physics(entity));
-
-        entity.events.listen('stateChange', (state) => {
-            console.log(`${entity.name}.state changed to ${state}`);
-        });
+        components.parseStates(
+            entity,
+            data,
+            this.getConditions(
+                conditions,
+                {entity, controller},
+                'animation_done'
+            )
+        );
+        
+        components.addPhysics(entity);
 
         entity.updateMethods.push(() => {
             entity.animator.setAnimation(
                 this.getAnimationName(entity)
             );
         });
-
-        const conditionMap = this.getConditions(
-            conditions,
-            {entity, controller},
-            'animation_done'
-        );
-
-        parseStateMachine(
-            stateMachine, 
-            data, 
-            conditionMap
-        );
     }
 
     getAnimationName(entity) {

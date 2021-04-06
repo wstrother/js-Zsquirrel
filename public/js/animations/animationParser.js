@@ -1,6 +1,16 @@
 import { Rect } from '../geometry.js';
 import { Animation, AnimationFrame } from './animation.js';
 
+
+export function parseAnimation(animator, json, expandLR=false) {
+    let parser = new AnimationParser(expandLR);
+    parser.parseJson(json);
+    animator.rectMap = parser.rectMap;
+    animator.animationMap = parser.animatonMap;
+    animator.setGraphics();
+}
+
+
 export class AnimationParser {
     constructor(expandLR=false) {
         this.defaultLength = null;
@@ -81,7 +91,7 @@ export class AnimationParser {
         return json;
     }
 
-    parseFile(json) {
+    parseJson(json) {
         this.animationJson = json;
         this.cellSize = json.cellSize;
         

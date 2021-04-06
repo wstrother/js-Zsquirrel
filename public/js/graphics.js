@@ -59,6 +59,18 @@ export class ImageGraphics extends Graphics {
         }
     }
 
+    get width() {
+        return this.sprite.width;
+    }
+
+    get height() {
+        return this.sprite.height;
+    }
+
+    get size() {
+        return [this.width, this.height]
+    }
+
     scaleSprite(sprite, scaleX, scaleY) {
         sprite.setTransform(sprite.x, sprite.y, scaleX, scaleY);
     }

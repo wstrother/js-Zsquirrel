@@ -1,5 +1,3 @@
-import { SpriteSheetGraphics } from "../graphics.js";
-
 export class Animation {
     constructor(name) {
         this.name = name;
@@ -62,13 +60,12 @@ export class AnimationFrame {
 }
 
 export class Animator {
-    constructor(entity, image, animationMap, rectMap) {
-        this.animationMap = animationMap;
-        this.rectMap = rectMap;
-        this.current = "";
+    constructor(entity, defaultAnimation='default') {
+        this.animationMap = new Map();
+        this.rectMap = new Map();
+        this.current = defaultAnimation;
 
         this.entity = entity;
-        this.setGraphics(image);
     }
 
     get animationNames() {
@@ -91,9 +88,7 @@ export class Animator {
         return this.currentSpriteKeys.map(key => this.rectMap.get(key));
     }
 
-    setGraphics(image) {
-        this.entity.addComponent('graphics', new SpriteSheetGraphics(this.entity, image));
-
+    setGraphics() {
         this.rectMap.forEach((value, key) => {
             this.entity.graphics.addSprite(key, value);
         });

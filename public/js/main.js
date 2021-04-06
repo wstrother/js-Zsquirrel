@@ -77,7 +77,8 @@ const envFile = `environments/${urlParams.get('env')}.json`;
 
 envContext.loadEnvironment(
     envFile, 
-    new ResourceManager(app.loader)
+    new ResourceManager(app.loader),
+    'resources.json'
 ).then(entities => {
     console.log('entities', entities);
     console.log('model', envContext.model);

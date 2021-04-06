@@ -1,10 +1,4 @@
 {
-    "interfaces": {
-        "GameDebugInterface": {
-            "setFont": ["font.png", "fonts/font.json"]
-        }
-    },
-
     "entities": [
         {
             "name": "DT Hud",
