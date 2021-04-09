@@ -47,21 +47,33 @@ export class Context {
 
     // populate function parses json, instantiates entities and applies
     // setter values and components based on application interface methods
-    async loadEnvironment(name, loader, resourceFile=false) {
+    async loadEnvironment(name, loader, commonFile=false) {
         let {url} = loader.getResource(name);
         let promises = [
             fetch(url).then(resp => resp.json())
         ];
 
-        if (resourceFile) {
-            let resourcesUrl = loader.getResource(resourceFile).url;
-            promises.push(fetch(resourcesUrl).then(resp => resp.json()));
+        if (commonFile) {
+            let commonUrl = loader.getResource(commonFile).url;
+            promises.push(fetch(commonUrl).then(resp => resp.json()));
         }
 
         const json = await Promise.all(promises).then(
-            ([env, resources]) => {
-                if (resources) {
-                    env.resources = resources;
+            ([env, common]) => {
+                if (common) {
+                    
+                    // add common resources
+                    if (common.resources) {
+                        env.resources = common.resources;
+                    }
+
+                    // add common entities, layers
+                    ['entities', 'layers'].forEach(key => {
+                        if (common[key]) {
+                            env[key] = common[key].concat(env[key] || []);
+                        }
+                    })
+
                 }
                 return env;
             }

@@ -25,17 +25,7 @@
             "position": [200, 150],
             "group": "Sprite Group",
             "face": [0, 100]
-        },
-
-        {
-            "name": "Keyboard Controller",
-            "class": "Controller",
-
-            "GameControllerInterface": {
-                "setControllerDevices": "controllers/keyboard.json"
-            }
         }
-
     ],
 
     "layers": [

@@ -291,60 +291,6 @@ function drawVector(graphics, arg) {
     graphics.drawCircle(x2, y2, 1);
 }
 
-// export class CircleLayerGraphics extends LayerGraphics {
-//     constructor(entity) {
-//         super(entity);
-
-//         this.color = "";
-//         this.circles = [];
-//     }
-
-//     setImage() {
-//         super.setImage();
-//         const container = this.image;
-
-//         let graphics = new PIXI.Graphics();
-//         graphics.lineStyle(1, this.color);
-
-//         this.circles.forEach(({radius, position}) => {
-//             let [x, y] = position;
-
-//             graphics.drawCircle(x, y, radius);    
-//         });
-
-//         container.addChild(graphics);
-//     }
-// }
-
-// export class VectorLayerGraphics extends LayerGraphics {
-//     constructor(entity) {
-//         super(entity);
-
-//         this.color = "";
-//         this.segments = [];
-//     }
-
-//     setImage() {
-//         super.setImage();
-//         const container = this.image;
-
-//         let graphics = new PIXI.Graphics();
-//         graphics.lineStyle(1, this.color);
-
-//         this.segments.forEach(({vector, position}) => {
-//             let [x, y] = position;
-//             let [dx, dy] = vector.add(x, y).coordinates;
-
-//             graphics.moveTo(x, y);
-
-//             graphics.lineTo(dx, dy);
-//             graphics.drawCircle(dx, dy, 1);
-//         });
-
-//         container.addChild(graphics);
-//     }
-// }
-
 
 export class Font {
     constructor(imageResource, width, height, rowLength, chars, scale=1) {
@@ -382,16 +328,16 @@ export class Font {
         this.textureMap.setTexture(key, x, y, width, height);
     }
 
-    getCharSprite(key, row=0, col=0, ox=0, oy=0) {
+    getCharSprite(key, row=0, col=0, x=0, y=0) {
         let [width, height] = this.size;
 
         let texture = this.textureMap.get(key);
         let sprite = new PIXI.Sprite(texture);
 
-        sprite.x = ox + (col * width * this.scale);
-        sprite.y = oy + (row * height * this.scale);
+        sprite.x = x + (col * width * this.scale);
+        sprite.y = y + (row * height * this.scale);
 
-        TransformSprite(sprite, [ox, oy], [this.scale, this.scale], 0, true);
+        TransformSprite(sprite, [0, 0], [this.scale, this.scale], 0, true);
 
         return sprite;
     }

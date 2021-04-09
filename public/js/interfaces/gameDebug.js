@@ -293,7 +293,7 @@ export class GameDebugInterface {
             
             this.context.model.set(label.name, label);
 
-            position[1] += 9;
+            position[1] += (this.defaultFont.size[0] + 1) * this.defaultFont.scale;
         });
     }
 }

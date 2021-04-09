@@ -13,14 +13,6 @@
             "EntityBehaviorInterface": {
                 "setAnimationMachine": ["Keyboard Controller", "states/squirrel.json"]
             }
-        },
-
-        {
-            "name": "Keyboard Controller",
-            "class": "Controller",
-            "GameControllerInterface": {
-                "setControllerDevices": "controllers/keyboard.json"
-            }
         }
 
     ],

@@ -1,0 +1,27 @@
+{
+    "resources": [
+        "debug-font.png",
+        "fonts/font.json"
+    ],
+
+    "entities": [
+        {
+            "name": "Keyboard Controller",
+            "class": "Controller",
+
+            "GameControllerInterface": {
+                "setControllerDevices": "controllers/keyboard.json"
+            }
+        },
+
+        {
+            "name": "DT Hud",
+            "group": "HUD Group",
+            "position": [0, 586],
+
+            "GameDebugInterface": {
+                "reportModelAverage": ["dt", 5]
+            }
+        }
+    ]
+}

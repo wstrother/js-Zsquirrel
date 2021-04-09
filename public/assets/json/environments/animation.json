@@ -16,23 +16,6 @@
         },
 
         {
-            "name": "Keyboard Controller",
-            "class": "Controller",
-            "GameControllerInterface": {
-                "setControllerDevices": "controllers/keyboard.json"
-            }
-        },
-
-        {
-            "name": "DT Hud",
-            "group": "HUD Group",
-
-            "GameDebugInterface": {
-                "reportModelAverage": ["dt", 5]
-            }
-        },
-
-        {
             "name": "State HUD",
             "position": [150, 0],
             "group": "HUD Group",

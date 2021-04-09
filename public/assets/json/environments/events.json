@@ -1,13 +1,5 @@
 {
     "entities": [
-        {
-            "name": "DT Hud",
-            "group": "HUD Group",
-
-            "GameDebugInterface": {
-                "reportModelAverage": ["dt", 5]
-            }
-        },
         
         {
             "name": "Squirrel",
@@ -25,15 +17,6 @@
 
             "EntityBehaviorInterface": {
                 "queue": []
-            }
-        },
-
-        {
-            "name": "Keyboard Controller",
-            "class": "Controller",
-
-            "GameControllerInterface": {
-                "setControllerDevices": "controllers/keyboard.json"
             }
         }
 
