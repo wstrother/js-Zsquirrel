@@ -1,6 +1,9 @@
 {
     "devices": [
         {"name": "A", "type": "ButtonMappingKey", "code": "KeyA"},
+        {"name": "S", "type": "ButtonMappingKey", "code": "KeyS"},
+        {"name": "D", "type": "ButtonMappingKey", "code": "KeyD"},
+        {"name": "F", "type": "ButtonMappingKey", "code": "KeyF"},
         {"name": "start", "type": "ButtonMappingKey", "code": "Space"},
         {"name": "up", "type": "ButtonMappingKey", "code": "ArrowUp"},
         {"name": "down", "type": "ButtonMappingKey", "code": "ArrowDown"},

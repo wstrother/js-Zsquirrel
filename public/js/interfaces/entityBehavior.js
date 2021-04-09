@@ -1,4 +1,3 @@
-import { parseStateMachine } from "../states/stateParser.js";
 import { Vector2 } from "../geometry.js";
 import controls from './methods/controls.js';
 import conditions from './methods/states/conditions.js';
@@ -10,8 +9,9 @@ export class EntityBehaviorInterface {
         this.context = context;
     }
 
-    setPhysics(entity, accel, friction) {
-        components.addPhysics(entity, friction);
+    setPhysics(entity, accel, friction, gravity, mass=1) {
+        components.addPhysics(entity, friction, gravity);
+        entity.physics.mass = mass;
 
         entity.events.listen('move', (dx, dy) => {
             let force = new Vector2(dx, dy);
@@ -22,10 +22,16 @@ export class EntityBehaviorInterface {
 
     setMovementControls(entity, controller) {
         const emitMove = controls.mapUdlr(
-            (dx, dy) => entity.events.emit('move', dx, dy)
+            (dx, dy) => {
+                entity.events.emit('move', dx, dy);
+
+                if (entity.paused) {
+                    entity.physics.integrateForces();
+                }
+            }
         );
 
-        controls.setControls(entity, controller, emitMove);
+        controls.setUiControls(controller, emitMove);
     }
 
     setAnimationMachine(entity, controller, data) {

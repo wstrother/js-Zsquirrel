@@ -30,7 +30,7 @@
         
         {
             "name": "Squirrel2",
-            "position": [200, 150],
+            "position": [300, 50],
             "group": "Sprite Group",
 
             "SpriteGraphicsInterface": {
@@ -38,7 +38,7 @@
             },
 
             "EntityBehaviorInterface": {
-                "setPhysics": [0.5, 0.05]
+                "setPhysics": [0.5, 0.05, 0, 5]
             }
         },
 

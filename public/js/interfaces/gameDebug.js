@@ -1,5 +1,4 @@
-import { Entity, Layer } from "../entities.js";
-import { ShapeLayerGraphics, Font, TextGraphics } from "../graphics.js";
+import { Font } from "../graphics.js";
 import debug from './methods/debug.js';
 import controls from './methods/controls.js';
 import components from "./methods/components.js";
@@ -50,10 +49,6 @@ export class GameDebugInterface {
             color
         );
         this.context.model.set(layer.name, layer);
-
-        parentLayer.events.listen('spawn', () => {
-            layer.setLayer(parentLayer);
-        });
 
         layer.updateMethods.push(
             debug.getShapesUpdate(
@@ -225,7 +220,7 @@ export class GameDebugInterface {
             controls.mapButton(
                 'start', () => entity.setPaused(!entity.paused)),
             
-            controls.mapButton(
+            controls.mapButtonConditional(
                 'A', () => entity.update(),
                 () => entity.paused)
         );
@@ -254,7 +249,7 @@ export class GameDebugInterface {
         this.reportValue(entity, getAnimationState, interval);
     }
 
-    reportModelAverage(entity, key, interval=5) {
+    reportModelAverage(entity, key, interval=5, label=false) {
         const getAverage = debug.getValueAverager(
             () => this.context.model.get(key), 
             interval
@@ -263,24 +258,43 @@ export class GameDebugInterface {
         this.reportValue(
             entity,
             getAverage,
-            interval
+            interval,
+            label
         );
     }
 
-    reportModelValue(entity, key, interval=1) {
+    reportModelValue(entity, key, interval=1, label=false) {
+        key = key.toLowerCase();
         this.reportValue(
             entity,
             () => this.context.model.get(key),
-            interval
+            interval,
+            label
         );
     }
 
-    reportValue(entity, getValue, interval=1) {
+    reportValue(entity, getValue, interval=1, label=false) {
         this.setTextGraphics(entity);
 
         entity.updateMethods.push(
-            debug.getIntervalSetText(entity, getValue, interval)
+            debug.getIntervalSetText(entity, getValue, interval, label)
         );
+    }
+
+    trackModelValues(layer, position, ...keys) {
+        keys.forEach(key => {
+            let label = make.addTextSprite(
+                `Value '${key}' Debug Label`, 
+                this.defaultFont, 
+                {layer, position}
+            );
+
+            this.reportModelValue(label, key, 5, key);
+            
+            this.context.model.set(label.name, label);
+
+            position[1] += 9;
+        });
     }
 }
 

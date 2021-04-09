@@ -1,4 +1,4 @@
-import { Vector2 } from "../geometry.js";
+import { Rect, Vector2 } from "../geometry.js";
 
 export class Physics {
     constructor(entity) {
@@ -7,6 +7,8 @@ export class Physics {
         this._velocity = new Vector2(0, 0);
         this.forces = [];
         this.friction = 0;
+        this.gravity = 0;
+        this.mass = 1;
     }
 
     get heading() {
@@ -62,16 +64,31 @@ export class Physics {
         this.applyForce(friction);
     }
 
+    applyGravity() {
+        this.applyForce(new Vector2(0, this.gravity));
+    }
+
+    integrateForces() {
+        this.forces.forEach(force => {
+            this._velocity.move(force);
+        });
+        this.forces.length = 0;
+    }
+
     update() {
         if (this.friction) {
             this.applyFriction();
         }
 
-        this.forces.forEach(force => {
-            this._velocity.move(force);
-        });
-        this.forces.length = 0;
+        if (this.gravity) {
+            this.applyGravity();
+        }
 
-        this.entity.move(...this.velocity);
+        this.integrateForces();
+
+        let [dx, dy] = this.velocity;
+        dx /= this.mass;
+        dy /= this.mass;
+        this.entity.move(dx, dy);
     }
 }

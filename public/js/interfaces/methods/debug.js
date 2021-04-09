@@ -31,12 +31,20 @@ function formatValue(value) {
         }
     }
 
+    if (typeof(value) === 'undefined') {
+        return 'undefined';
+    }
+
     return value.toString();
 }
 
 
 
 export default {
+
+    getModelSetter: (model, key, getValue) => {
+        return () => model.set(key, getValue());
+    },
 
     getValueAverager: (getValue, cacheSize) => {
         let cache = [];
@@ -53,14 +61,20 @@ export default {
         }
     },
 
-    getIntervalSetText: (entity, getValue, interval) => {
+    getIntervalSetText: (entity, getValue, interval, label=false) => {
         let frames = 0;
-    
+        let text;
+
         return () => {
-    
             if (frames === 0) {
+                text = formatValue(getValue());
+
+                if (label) {
+                    text = `${label}: ${text}`;
+                }
+
                 entity.graphics.setText(
-                    formatValue(getValue())
+                    formatValue(text)
                 );
             }
     

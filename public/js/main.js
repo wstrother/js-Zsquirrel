@@ -7,6 +7,7 @@ import { GameDebugInterface } from './interfaces/gameDebug.js';
 import { Controller } from './controller/controller.js';
 import { EntityBehaviorInterface } from "./interfaces/entityBehavior.js";
 import { CollisionLayerInterface } from "./interfaces/collisionLayer.js";
+import { Wall } from "./physics/vectorCollision.js";
 
 const app = new PIXI.Application();
 PIXI.settings.SCALE_MODE = PIXI.SCALE_MODES.NEAREST;
@@ -68,7 +69,8 @@ const envContext = new Context(
         CollisionLayerInterface
     ],
     [
-        Controller
+        Controller,
+        Wall
     ]
 );
 

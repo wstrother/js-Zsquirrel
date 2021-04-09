@@ -86,12 +86,13 @@ export class Vector2 {
         turns *= 2 * Math.PI;
         let [i, j] = [Math.cos(turns), Math.sin(turns)];
 
-        this.multiply(i, j);
+        this.multiply(i, -j);
 
         return this;
     }
 
-    set(x, y) {
+    set(...args) {
+        let [x, y] = Vector2.parseArgs(...args);
         this.x = x;
         this.y = y;
     }
@@ -303,4 +304,100 @@ export class Rect {
             this.top + (this.height / 2)
         ];
     }
+
+    setCenter(x, y) {
+        let [dx, dy] = [this.width / 2, this.height / 2];
+        this.setPosition(x - dx, y - dy);
+    }
+
+    get tlrb() {
+        return [
+            this.top, this.left,
+            this.right, this.bottom
+        ];
+    }
+
+    get corners() {
+        return [
+            this.topLeft, this.topRight,
+            this.bottomLeft, this.bottomRight
+        ];
+    }
+}
+
+
+export class SquareMatrix2 {
+    constructor(values) {
+        let [a, b] = values[0];
+        let [c, d] = values[1];
+
+        this.a = a;
+        this.b = b;
+        this.c = c;
+        this.d = d;
+    }
+
+    static getFromVectors(i, j) {
+        let m = [
+            [i.x, j.x],
+            [i.y, j.y]
+        ];
+
+        return new SquareMatrix2(m);
+    }
+
+    getVectors() {
+        return [
+            new Vector2(this.a, this.c),
+            new Vector2(this.b, this.d)
+        ];
+    }
+
+    multiplyVector(...args) {
+        let [x, y] = Vector2.parseArgs(...args);
+        let i, j;
+
+        i = (this.a * x) + (this.b * y);
+        j = (this.c * x) + (this.d * y);
+
+        return new Vector2(i, j);
+    }
+
+    multiplyMatrix(m2) {
+        let [i, j] = m2.getVectors();
+
+        let i2 = this.multiplyVector(i);
+        let j2 = this.multiplyVector(j);
+
+        return SquareMatrix2.getFromVectors(i2, j2);
+    }
+}
+
+
+export function getBasisVectorsInDirection(angle) {
+    return [
+        new Vector2(1, 0).rotate(angle),
+        new Vector2(0, 1).rotate(angle)
+    ]
+}
+
+
+export function scaleVectorInDirection(vector, angle, scale) {
+
+    let [i, j] = getBasisVectorsInDirection(-angle);
+
+    let m1 = SquareMatrix2.getFromVectors(i, j);
+    let m2 = new SquareMatrix2([
+        [scale, 0],
+        [0, 1]
+    ]);
+
+    let m = m2.multiplyMatrix(m1);
+
+    let newVector = m.multiplyVector(vector);
+
+    vector.set(...newVector.coordinates);
+    vector.rotate(angle);
+
+    return vector;
 }

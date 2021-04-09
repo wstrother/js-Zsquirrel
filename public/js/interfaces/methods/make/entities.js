@@ -42,5 +42,12 @@ export default {
 
         components.addShapeGraphics(layer, color);
         return layer;
+    },
+
+    addTextSprite: (name, font, setters={}) => {
+        let entity = createEntity(name, setters);
+
+        components.addTextGraphics(entity, font);
+        return entity;
     }
 }

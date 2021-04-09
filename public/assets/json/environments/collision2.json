@@ -9,13 +9,13 @@
         {
             "name": "Vector Sprite",
             "class": "Wall",
-            "position": [10, 50],
+            "position": [50, 50],
             "group": "Sprite Group",
-            "face": [100, 0],
+            "face": [0, 50],
 
             "CollisionLayerInterface": {
-                "addVectorControls": ["Keyboard Controller", 2, "Vector Sprite 2"],
-                "reportIntersections": ["Vector Sprite 2"]
+                "addTransformControls": ["Keyboard Controller", 2, "Vector Sprite 2"],
+                "reportTransformation": ["Vector Sprite 2"]
             }
         },
 
@@ -58,8 +58,8 @@
 
             "CollisionLayerInterface": {
                 "addWalls": [
-                    [[200, 0], [200, 300]],
-                    [[0, 150], [400, 150]]
+                    [[200, 150], [200, 250]],
+                    [[200, 150], [250, 150]]
                 ]
             },
 
@@ -75,10 +75,10 @@
             "GameDebugInterface": {
                 "trackModelValues": [
                     [0, 0],
-                    "ORIGIN_OFFSET",
-                    "Y_INTERCEPT",
-                    "AXIS_COLLISION",
-                    "VECTOR_COLLISION"
+                    "SCALAR_VALUE",
+                    "SCALAR_ANGLE",
+                    "TARGET_VECTOR",
+                    "TARGET_MAGNITUDE"
                 ]
             }
         }

@@ -3,32 +3,45 @@ import { Vector2 } from "../geometry.js";
 
 
 export class Wall extends Entity {
-    constructor(name, vector) {
+    constructor(name, x=0, y=0) {
         super(name);
 
-        this.face = vector;
+        this.face = new Vector2(x, y);
     }
 
     static getFromPoints([sx, sy], [ex, ey]) {
         let x = ex - sx;
         let y = ey - sy;
-        let vector = new Vector2(x, y);
 
-        let wall = new Wall([[sx, sy], [ex, ey]].toString(), vector);
+        let wall = new Wall([[sx, sy], [ex, ey]].toString(), x, y);
         wall.setPosition(sx, sy);
 
         return wall;
+    }
+
+    setFace(dx, dy) {
+        this.face.set(dx, dy);
+    }
+
+    getNormal() {
+        return new Vector2(1, 0).rotate(this.face.angle + 0.25);
+    }
+
+    rotateAroundPoint(pivot, angle) {
+        let [position, vector] = rotateAroundPoint(this.position, this.face, pivot, angle);
+        this.setPosition(...position);
+        this.face.set(...vector.coordinates);
     }
 }
 
 
 // returns an array [[x, y], vector] such that if a given point
 // 
-function rotateAroundPoint(origin, vector, pivot, angle) {
-    let [ox, oy] = origin;
+export function rotateAroundPoint(start, vector, pivot, angle) {
+    let [vx, vy] = start;
     let [px, py] = pivot;
 
-    let [dx, dy] = [ox - px, oy - py];
+    let [dx, dy] = [vx - px, vy - py];
     let d = new Vector2(dx, dy);
     d.rotate(angle);
 
@@ -43,7 +56,28 @@ function rotateAroundPoint(origin, vector, pivot, angle) {
 // each defined by a vector and an origin point
 // returns false if the vectors are parallel
 export function getVectorCollision(vector1, point1, vector2, point2) {
+    let axisCollision = getAxisCollision(vector1, point1, vector2, point2);
 
+    if (!axisCollision) {
+        return false;
+    }
+
+    let [x, y] = axisCollision;
+
+    const inBounds = (v, [sx, sy]) => {
+        let [ex, ey] = v.add(sx, sy).coordinates;
+
+        let xbound = Math.min(sx, ex) <= x && x <= Math.max(sx, ex);
+        let ybound = Math.min(sy, ey) <= y && y <= Math.max(sy, ey);
+
+        return xbound && ybound;
+    }
+
+    if (inBounds(vector1, point1) && inBounds(vector2, point2)) {
+        return [x, y];
+    } else {
+        return false;
+    }
 }
 
 
@@ -51,13 +85,7 @@ export function getVectorCollision(vector1, point1, vector2, point2) {
 // each defined by a vector and an origin point
 // returns false if the axes are parallel
 export function getAxisCollision(vector1, point1, vector2, point2) {
-    let [vx1, vy1] = vector1.coordinates;
-    let [vx2, vy2] = vector2.coordinates;
-    let [x1, y1] = point1;
-    let [x2, y2] = point2;
-
-    debugger;
-
+    
     // define the first vector's rotational offset from a vertical line
     let delta = .75 - vector1.angle;
 
@@ -77,7 +105,7 @@ export function getAxisCollision(vector1, point1, vector2, point2) {
     }
 
     // shift the intercept value by the y offset of point 1
-    intercept -= y1;
+    intercept -= point1[1];
 
     // then define a new vector with this magnitude, rotating
     // back to match the original angle of vector1
@@ -95,8 +123,11 @@ export function getAxisCollision(vector1, point1, vector2, point2) {
 // return the Y Intercept value for a line defined by:
 //      a vector's angle intersecting a given point
 // returns false if the angle is vertical
-export function getYIntercept(vector, point) {
+export function getYIntercept(vector, point, offset=[0, 0]) {
     let [x, y] = point;
+    let [ox, oy] = offset;
+    x -= ox;
+    y -= oy;
 
     if (!vector.x) {
         return false;
@@ -106,9 +137,7 @@ export function getYIntercept(vector, point) {
         return y;
     }
 
-    debugger;
     let slope = vector.y / vector.x;
-    console.log(slope);
 
     return (y - (slope * x));
 }

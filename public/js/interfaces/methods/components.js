@@ -41,8 +41,13 @@ function addAnimation(entity, image, animation='default') {
 }
 
 export default {
-    addPhysics: (entity, friction=0) => {
-        addComponent(entity, 'physics', Physics, {friction});
+    addComponent,
+    addToGroup: (group, ...args) => {
+        group.entities.forEach(e => addComponent(e, ...args));
+    },
+
+    addPhysics: (entity, friction=0, gravity=0) => {
+        addComponent(entity, 'physics', Physics, {friction, gravity});
     },
 
     addStates,

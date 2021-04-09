@@ -4,6 +4,8 @@ function getDpadButtons(controller) {
     return DPAD_NAMES.map(d => controller.devices.get(d));
 }
 
+// get values
+
 function getDxDy(controller) {
     let [u, d, l, r] = getDpadButtons(controller);
     let [dx, dy] = [0, 0];
@@ -40,6 +42,33 @@ function buttonHeld(controller, name) {
     return controller.devices.get(name).held;
 }
 
+
+// map callbacks
+
+function udlrCallback(callback, check=false) {
+    return (controller) => {
+        let dx, dy;
+
+        if (!check) {
+            [dx, dy] = getDxDy(controller);
+        } else {
+            [dx, dy] = getDxDyCheck(controller);
+        }
+    
+        if (dx || dy) {
+            callback(dx, dy);
+        }
+    }
+}
+
+function buttonCallback(name, callback, check=true) {
+    return (controller) => {
+        if (check ? checkButton(controller, name) : buttonHeld(controller, name)) {
+            callback(controller);
+        }
+    }
+}
+
 function addCallbacks(entity, controller, ...methods) {
     methods.forEach(
         m => entity.updateMethods.push(() => m(controller))
@@ -48,36 +77,33 @@ function addCallbacks(entity, controller, ...methods) {
 
 
 export default {
-
+    // getters
     getDxDy,
     checkButton,
     checkButtons,
     buttonHeld,
 
-    mapUdlr: (callback, check=false) => {
-        return (controller) => {
-            let dx, dy;
+    // callback mappers
+    mapUdlr: udlrCallback,
 
-            if (!check) {
-                [dx, dy] = getDxDy(controller);
-            } else {
-                [dx, dy] = getDxDyCheck(controller);
-            }
+    mapUdlrConditional: (callback, conditional, check=false) => {
+        let inner = udlrCallback(callback, check);
         
-            if (dx || dy) {
-                callback(dx, dy);
+        return (controller) => {
+            if (conditional(controller)) {
+                inner(controller);
             }
         }
     },
 
-    mapButton: (name, callback, conditional=false) => {
-        return (controller) => {
-            if (conditional && !conditional()) {
-                return;
-            }
+    mapButton: buttonCallback,
 
-            if (checkButton(controller, name)) {
-                callback();
+    mapButtonConditional: (name, callback, conditional, check=true) => {
+        let inner = buttonCallback(name, callback, check);
+
+        return (controller) => {
+            if (conditional(controller)) {
+                inner(controller);
             }
         }
     },
