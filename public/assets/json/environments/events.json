@@ -1,0 +1,41 @@
+{
+    "entities": [
+        {
+            "name": "DT Hud",
+            "group": "HUD Group",
+
+            "GameDebugInterface": {
+                "reportModelAverage": ["dt", 5]
+            }
+        },
+        
+        {
+            "name": "Squirrel",
+            "position": [100, 50],
+            "group": "Sprite Group",
+            "paused": true,
+
+            "SpriteGraphicsInterface": {
+                "setImageSubGraphics": ["squirrel2.png", [0, 0, 50, 50]]
+            },
+
+            "GameDebugInterface": {
+                "setPauseButton": "Keyboard Controller"
+            },
+
+            "EntityBehaviorInterface": {
+                "queue": []
+            }
+        },
+
+        {
+            "name": "Keyboard Controller",
+            "class": "Controller",
+
+            "GameControllerInterface": {
+                "setControllerDevices": "controllers/keyboard.json"
+            }
+        }
+
+    ]
+}

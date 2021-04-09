@@ -89,4 +89,17 @@ export class EntityBehaviorInterface {
 
         return conditionMap
     }
+
+    queue(entity) {
+        entity.events.queueEvents(
+            {name: 'test', duration: 5, lerp: false},
+            {name: 'test2', duration: 10, args: [1, 2, 3]}
+        )
+
+        entity.events.listen(
+            'test', 
+            timer => console.log('test', timer.ratio));
+        
+        entity.events.listen('test2', (...args) => console.log('test 2', ...args));
+    }
 }
